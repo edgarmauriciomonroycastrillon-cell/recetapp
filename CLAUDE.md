@@ -10,6 +10,7 @@ Web que compara precios de medicamentos entre farmacias de Colombia y muestra la
 - Sitio estático: solo HTML, CSS y JavaScript.
 - Sin frameworks, sin dependencias de npm y sin paso de build.
 - Debe funcionar tal cual en GitHub Pages (rutas relativas, nada que requiera servidor).
+- Al cambiar `estilos.css` o `app.js`, subir el número `?v=` de sus enlaces en `index.html` (GitHub Pages deja que el navegador los guarde 10 minutos).
 
 ### Idioma y moneda
 - Todo el texto en español de Colombia.

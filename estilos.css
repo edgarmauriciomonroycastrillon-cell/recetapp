@@ -306,7 +306,7 @@ button {
 }
 
 .franja p {
-  margin: 0;
+  margin: 0 auto; /* centrada como el resto (antes quedaba pegada a la izquierda) */
   padding-top: 0.55rem;
   padding-bottom: 0.55rem;
   font-size: 0.85rem;
@@ -406,6 +406,94 @@ button {
   font-size: 0.9rem;
   cursor: pointer;
   white-space: nowrap;
+}
+
+/* ---------- Filtros por farmacia y marca ---------- */
+.filtros {
+  margin-bottom: 1.1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--borde);
+}
+
+.filtros-fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1.5rem;
+}
+
+.filtro-grupo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.filtro-etiqueta {
+  margin-right: 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--texto-2);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  background: var(--fondo);
+  color: var(--texto);
+  font-size: 0.88rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.chip:hover {
+  border-color: var(--marca);
+}
+
+.chip[aria-pressed="true"] {
+  border-color: var(--marca);
+  background: var(--marca-claro);
+  color: var(--marca-oscuro);
+  font-weight: 700;
+}
+
+.chip .farmacia {
+  font-weight: inherit;
+  color: inherit;
+}
+
+.filtro-marca {
+  min-width: 12rem;
+  max-width: 100%;
+  padding: 0.35rem 2rem 0.35rem 0.7rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--fondo);
+  color: var(--texto);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.filtro-marca:focus {
+  outline: none;
+  border-color: var(--marca);
+}
+
+.quitar-filtros {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--marca);
+  font-weight: 600;
+  font-size: 0.88rem;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 /* ---------- Títulos de vista ---------- */
@@ -804,10 +892,28 @@ button {
   color: var(--texto-2);
 }
 
-.diferencia {
+.diferencia,
+.frente-media {
   font-size: 0.8rem;
   font-weight: 600;
+  white-space: nowrap;
+}
+
+.diferencia {
   color: var(--caro);
+}
+
+.bajo-media {
+  color: var(--ahorro);
+}
+
+.sobre-media {
+  color: var(--texto-2);
+}
+
+.precio-unidad,
+.precio-caja {
+  white-space: nowrap;
 }
 
 .oferta-acciones {
@@ -1093,6 +1199,7 @@ button {
 
   .oferta-precio {
     flex-direction: column;
+    flex-wrap: nowrap; /* con wrap, el navegador calcula mal el ancho de la columna */
     align-items: flex-end;
     text-align: right;
   }
@@ -1182,19 +1289,12 @@ button {
   }
 
   .oferta-fila {
-    grid-template-columns: 80px minmax(0, 1fr) 170px 210px;
-    grid-template-areas: "foto info precio acciones";
-    align-items: center;
-    gap: 1.25rem;
+    gap: 0.4rem 1.25rem;
   }
 
   .oferta .foto {
     width: 80px;
     height: 80px;
-  }
-
-  .oferta-acciones {
-    justify-content: flex-end;
   }
 
   .oferta-fila:hover {
@@ -1212,4 +1312,24 @@ button {
   .vista-titulo {
     font-size: 2rem;
   }
+}
+
+/* Pantallas anchas: foto, producto, precio y botones en una sola línea.
+   Por debajo de 1280 px los botones van bajo el nombre para que el nombre no se aplaste. */
+@media (min-width: 1280px) {
+  .oferta-fila {
+    grid-template-columns: 80px minmax(0, 1fr) minmax(13rem, 15rem) auto;
+    grid-template-areas: "foto info precio acciones";
+    align-items: center;
+  }
+
+  .oferta-acciones {
+    justify-content: flex-end;
+  }
+}
+
+/* Las líneas de % pueden partirse en dos en vez de empujar al nombre */
+.diferencia,
+.frente-media {
+  white-space: normal;
 }

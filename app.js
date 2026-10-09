@@ -41,6 +41,10 @@ const numeroCO = new Intl.NumberFormat('es-CO');
 let productos = [];
 let farmacias = []; // nombres en orden fijo, para darle a cada una su color
 let categoriaActiva = TODAS;
+// Filtros por farmacia y marca (vacío = todas). Se guardan en la URL: #farmacia=...&marca=...
+let filtroFarmacias = new Set();
+let filtroMarca = '';
+let nombresMarca = new Map(); // clave -> nombre para mostrar
 let modoCatalogo = (() => {
   try {
     return localStorage.getItem('medifacil-vista') === 'lista' ? 'lista' : 'cuadricula';
@@ -54,6 +58,7 @@ const $vista = document.getElementById('vista');
 const $lateral = document.getElementById('lateral');
 const $franja = document.getElementById('franja');
 const $actualizado = document.getElementById('actualizado');
+const $filtros = document.getElementById('filtros');
 
 // ---------- Datos ----------
 
@@ -177,10 +182,66 @@ function porPrecioUnidad(a, b) {
   return a.precio_unidad - b.precio_unidad;
 }
 
+// ---------- Filtros por farmacia y marca ----------
+
+// Las farmacias escriben algunas marcas distinto: "AG" es American Generics, "Mkgenerico" es MK.
+const ALIAS_MARCAS = { ag: 'americangenerics', mkgenerico: 'mk', lasantegenericos: 'lasante' };
+const NOMBRE_MARCA_FIJO = { americangenerics: 'American Generics', mk: 'MK', lasante: 'La Santé' };
+
+// "COASPHARMA" → "Coaspharma"; las siglas cortas ("MSD") se dejan en mayúsculas.
+function nombrePropio(texto) {
+  if (texto.length <= 3) return texto.toUpperCase();
+  return texto.toLowerCase().replace(/(^|[\s-])(\p{L})/gu, (_, antes, letra) => antes + letra.toUpperCase());
+}
+
+function claveMarca(marca) {
+  const clave = normalizar(marca).replace(/[^a-z0-9]/g, '');
+  return ALIAS_MARCAS[clave] || clave;
+}
+
+// Nombre para mostrar de cada marca: la forma escrita más común, preferiblemente sin todo en mayúsculas.
+function prepararMarcas() {
+  const formas = new Map();
+  for (const p of productos) {
+    const clave = claveMarca(p.marca);
+    if (!clave || clave === 'sinmarca') continue;
+    if (!formas.has(clave)) formas.set(clave, new Map());
+    const conteo = formas.get(clave);
+    conteo.set(p.marca, (conteo.get(p.marca) || 0) + 1);
+  }
+  nombresMarca = new Map();
+  for (const [clave, conteo] of formas) {
+    const opciones = [...conteo.entries()].sort(
+      (a, b) => (a[0] === a[0].toUpperCase()) - (b[0] === b[0].toUpperCase()) || b[1] - a[1]
+    );
+    const elegida = opciones[0][0];
+    nombresMarca.set(
+      clave,
+      NOMBRE_MARCA_FIJO[clave] ||
+        (elegida === elegida.toUpperCase() || elegida === elegida.toLowerCase() ? nombrePropio(elegida) : elegida)
+    );
+  }
+}
+
+function pasaFiltros(p, { ignorarMarca = false } = {}) {
+  if (filtroFarmacias.size && !filtroFarmacias.has(p.farmacia)) return false;
+  if (!ignorarMarca && filtroMarca && claveMarca(p.marca) !== filtroMarca) return false;
+  return true;
+}
+
+function hayFiltros() {
+  return filtroFarmacias.size > 0 || Boolean(filtroMarca);
+}
+
+function productosFiltrados() {
+  return productos.filter((p) => pasaFiltros(p));
+}
+
 function buscar(consulta) {
+  const base = productosFiltrados();
   const palabras = normalizar(consulta).split(/\s+/).filter(Boolean);
   const coincidencias = new Set(
-    productos.filter((p) => palabras.every((w) => p.texto_busqueda.includes(w)))
+    base.filter((p) => palabras.every((w) => p.texto_busqueda.includes(w)))
   );
 
   // Se muestra el grupo completo (misma sustancia y concentración) de cada coincidencia,
@@ -190,7 +251,7 @@ function buscar(consulta) {
     const clave = `${p.principio_activo}|${p.concentracion}`;
     if (!grupos.has(clave)) grupos.set(clave, []);
   }
-  for (const p of productos) {
+  for (const p of base) {
     const clave = `${p.principio_activo}|${p.concentracion}`;
     if (grupos.has(clave)) grupos.get(clave).push(p);
   }
@@ -207,10 +268,10 @@ function buscar(consulta) {
   };
 }
 
-// Un resumen por principio activo para el catálogo.
+// Un resumen por principio activo para el catálogo (respeta los filtros de farmacia y marca).
 function resumenCatalogo() {
   const porPrincipio = new Map();
-  for (const p of productos) {
+  for (const p of productosFiltrados()) {
     if (!porPrincipio.has(p.principio_activo)) porPrincipio.set(p.principio_activo, []);
     porPrincipio.get(p.principio_activo).push(p);
   }
@@ -347,8 +408,10 @@ function mostrarCatalogo() {
   cabeza.append(
     crear('h1', 'vista-titulo', categoriaActiva === TODAS ? 'Medicamentos disponibles' : categoriaActiva),
     crear('p', 'vista-sub',
-      `${visibles.length} ${visibles.length === 1 ? 'medicamento' : 'medicamentos'} con precios en ${listaFarmacias()}. ` +
-      'Elige uno para ver y comparar todos sus precios.')
+      `${visibles.length} ${visibles.length === 1 ? 'medicamento' : 'medicamentos'} con precios en ` +
+      `${filtroFarmacias.size ? listaDe([...filtroFarmacias]) : listaFarmacias()}` +
+      (filtroMarca ? ` de la marca ${nombresMarca.get(filtroMarca)}` : '') +
+      '. Elige uno para ver y comparar todos sus precios.')
   );
 
   // Ver como cuadrícula o como lista (se recuerda en este navegador)
@@ -402,7 +465,7 @@ function mostrarCatalogo() {
 // ---------- Resultados ----------
 
 function crearOferta(p, info, indice) {
-  const { grupo, minimo, coincide } = info;
+  const { grupo, minimo, media, coincide } = info;
   const esMasBarata = minimo != null && p.precio_unidad === minimo;
 
   const li = crear('li', 'oferta' + (esMasBarata ? ' mas-barata' : ''));
@@ -436,8 +499,21 @@ function crearOferta(p, info, indice) {
     precio.append(crear('span', 'precio-caja',
       `${pesos.format(p.precio)}${p.unidades ? ` por ${p.unidades} unidades` : ''}`));
   }
-  if (!esMasBarata && minimo != null && p.precio_unidad != null) {
-    precio.append(crear('span', 'diferencia', `+${pesos.format(p.precio_unidad - minimo)} c/u`));
+  if (p.precio_unidad != null && minimo != null) {
+    // Frente al más barato: cuánto más cuesta por unidad, en pesos y en %.
+    if (!esMasBarata) {
+      precio.append(crear('span', 'diferencia',
+        `+${pesos.format(p.precio_unidad - minimo)} c/u (+${porcentajeCO.format((p.precio_unidad - minimo) / minimo)}) vs. el más barato`));
+    }
+    // Frente a la media del grupo (solo si hay con qué comparar).
+    if (media != null && grupo.filter((g) => g.precio_unidad != null).length > 1) {
+      const diferencia = (p.precio_unidad - media) / media;
+      let texto = 'en la media';
+      if (Math.abs(diferencia) >= 0.005) {
+        texto = `${porcentajeCO.format(Math.abs(diferencia))} ${diferencia < 0 ? 'bajo' : 'sobre'} la media`;
+      }
+      precio.append(crear('span', `frente-media ${diferencia < 0 ? 'bajo-media' : 'sobre-media'}`, texto));
+    }
   }
   fila.append(precio);
 
@@ -531,6 +607,8 @@ function crearGrupo(lista, coincidencias) {
   const conPrecio = lista.filter((p) => p.precio_unidad != null);
   const minimo = conPrecio.length ? conPrecio[0].precio_unidad : null;
   const maximo = conPrecio.length ? conPrecio[conPrecio.length - 1].precio_unidad : null;
+  // Media (promedio) del precio por unidad del grupo
+  const media = conPrecio.length ? conPrecio.reduce((suma, p) => suma + p.precio_unidad, 0) / conPrecio.length : null;
 
   const cabeza = crear('header', 'grupo-cabeza');
   cabeza.append(crear('h2', 'grupo-titulo',
@@ -538,9 +616,9 @@ function crearGrupo(lista, coincidencias) {
   const numFarmacias = new Set(lista.map((p) => p.farmacia)).size;
   const meta = crear('p', 'grupo-meta',
     `${lista.length} ${lista.length === 1 ? 'precio' : 'precios'} en ${numFarmacias} ${numFarmacias === 1 ? 'farmacia' : 'farmacias'}`);
-  if (minimo != null && maximo > minimo) {
-    meta.append(' · ', crear('strong', null, `hasta ${porcentajeCO.format((maximo - minimo) / maximo)} menos`),
-      ' eligiendo el más barato');
+  if (media != null && conPrecio.length > 1) {
+    meta.append(` · media ${pesos.format(media)} c/u · el más barato está `,
+      crear('strong', null, `${porcentajeCO.format((media - minimo) / media)} por debajo de la media`));
   }
   cabeza.append(meta);
   seccion.append(cabeza);
@@ -550,7 +628,7 @@ function crearGrupo(lista, coincidencias) {
   const ul = crear('ul', 'ofertas');
   lista.forEach((p, i) => {
     const coincide = marcarCoincidencias && coincidencias.has(p);
-    ul.append(crearOferta(p, { grupo: lista, minimo, coincide }, i));
+    ul.append(crearOferta(p, { grupo: lista, minimo, media, coincide }, i));
   });
   seccion.append(ul);
   return seccion;
@@ -565,15 +643,32 @@ function mostrarResultados(consulta) {
   if (grupos.length === 0) {
     $lateral.replaceChildren(volver);
     const vacio = crear('div', 'vacio');
-    vacio.append(
-      crear('h1', 'vista-titulo', `No encontramos «${consulta.trim()}»`),
-      crear('p', null,
-        'Revisa cómo está escrito o busca por principio activo. Por ahora comparamos estos 20 medicamentos:')
-    );
-    const ver = crear('button', 'boton boton-solido', 'Ver los medicamentos disponibles');
-    ver.type = 'button';
-    ver.addEventListener('click', () => irA('', true));
-    vacio.append(ver);
+    // ¿No hay resultados por la búsqueda o por los filtros?
+    const sinFiltros = hayFiltros() && productos.some((p) => normalizar(consulta).split(/\s+/).every((w) => p.texto_busqueda.includes(w)));
+    if (sinFiltros) {
+      vacio.append(
+        crear('h1', 'vista-titulo', `No hay precios de «${consulta.trim()}» con estos filtros`),
+        crear('p', null, `Filtro activo: ${textoFiltros()}. Quita o cambia los filtros para ver más opciones.`)
+      );
+      const quitar = crear('button', 'boton boton-solido', 'Quitar filtros');
+      quitar.type = 'button';
+      quitar.addEventListener('click', () => {
+        filtroFarmacias = new Set();
+        filtroMarca = '';
+        cambiarFiltros();
+      });
+      vacio.append(quitar);
+    } else {
+      vacio.append(
+        crear('h1', 'vista-titulo', `No encontramos «${consulta.trim()}»`),
+        crear('p', null,
+          'Revisa cómo está escrito o busca por principio activo. Por ahora comparamos estos 20 medicamentos:')
+      );
+      const ver = crear('button', 'boton boton-solido', 'Ver los medicamentos disponibles');
+      ver.type = 'button';
+      ver.addEventListener('click', () => irA('', true));
+      vacio.append(ver);
+    }
     $vista.replaceChildren(vacio);
     return;
   }
@@ -615,8 +710,9 @@ function mostrarResultados(consulta) {
     migas,
     crear('h1', 'vista-titulo', unico ? unico.nombre : `Resultados para «${consulta.trim()}»`),
     crear('p', 'vista-sub',
-      `${total} precios en ${grupos.length} ${grupos.length === 1 ? 'concentración' : 'concentraciones'}, ` +
-      'ordenados por precio por unidad. Toca una fila para ver la opción más barata con la misma sustancia.')
+      `${total} ${total === 1 ? 'precio' : 'precios'} en ${grupos.length} ${grupos.length === 1 ? 'concentración' : 'concentraciones'}` +
+      (hayFiltros() ? ` (filtro: ${textoFiltros()})` : '') +
+      ', ordenados por precio por unidad. Toca una fila para ver la opción más barata con la misma sustancia.')
   );
   $vista.replaceChildren(cabeza, ...grupos.map((g) => crearGrupo(g, coincidencias)));
 }
@@ -677,7 +773,7 @@ function mostrarSugerencias() {
     const palabras = texto.split(/\s+/);
     const vistos = new Set();
     const encontrados = [];
-    for (const p of [...productos].sort(porPrecioUnidad)) {
+    for (const p of productosFiltrados().sort(porPrecioUnidad)) {
       const clave = normalizar(p.producto);
       if (vistos.has(clave) || !palabras.every((w) => p.texto_busqueda.includes(w))) continue;
       vistos.add(clave);
@@ -731,25 +827,130 @@ function elegirSugerencia(consulta) {
 
 // ---------- Navegación ----------
 
-function consultaDeLaUrl() {
+// Lee búsqueda y filtros de la URL: #q=losartan&farmacia=Locatel,Olímpica&marca=genfar
+function leerUrl() {
   const parametros = new URLSearchParams(location.hash.slice(1));
-  return parametros.get('q') || '';
+  $busqueda.value = parametros.get('q') || '';
+  filtroFarmacias = new Set(
+    (parametros.get('farmacia') || '').split(',').filter((f) => farmacias.includes(f))
+  );
+  const marca = parametros.get('marca') || '';
+  filtroMarca = nombresMarca.has(marca) ? marca : '';
+}
+
+function hashActual() {
+  const parametros = new URLSearchParams();
+  if ($busqueda.value) parametros.set('q', $busqueda.value);
+  if (filtroFarmacias.size) parametros.set('farmacia', [...filtroFarmacias].join(','));
+  if (filtroMarca) parametros.set('marca', filtroMarca);
+  const texto = parametros.toString();
+  return texto ? `#${texto}` : location.pathname + location.search;
 }
 
 function mostrar() {
+  mostrarFiltros();
   const consulta = $busqueda.value;
   if (normalizar(consulta).length < MIN_LETRAS) mostrarCatalogo();
   else mostrarResultados(consulta);
 }
 
-// Cambia la vista y la URL (#q=...) para que funcionen el botón "atrás" y compartir el enlace.
+// Cambia la vista y la URL para que funcionen el botón "atrás" y compartir el enlace.
 function irA(consulta, nuevaEntrada) {
   $busqueda.value = consulta;
-  const hash = consulta ? `#q=${encodeURIComponent(consulta)}` : location.pathname + location.search;
-  if (nuevaEntrada) history.pushState(null, '', hash);
-  else history.replaceState(null, '', hash);
+  if (nuevaEntrada) history.pushState(null, '', hashActual());
+  else history.replaceState(null, '', hashActual());
   mostrar();
   if (nuevaEntrada) window.scrollTo({ top: 0 });
+}
+
+function cambiarFiltros() {
+  history.replaceState(null, '', hashActual());
+  mostrar();
+}
+
+// Barra de filtros: farmacias (se pueden elegir varias) y marca.
+function mostrarFiltros() {
+  const barra = crear('div', 'filtros-fila');
+
+  const grupoFarmacia = crear('div', 'filtro-grupo');
+  grupoFarmacia.setAttribute('role', 'group');
+  grupoFarmacia.setAttribute('aria-label', 'Filtrar por farmacia');
+  grupoFarmacia.append(crear('span', 'filtro-etiqueta', 'Farmacia'));
+  const todas = crear('button', 'chip', 'Todas');
+  todas.type = 'button';
+  todas.setAttribute('aria-pressed', String(filtroFarmacias.size === 0));
+  todas.addEventListener('click', () => {
+    filtroFarmacias = new Set();
+    cambiarFiltros();
+  });
+  grupoFarmacia.append(todas);
+  for (const farmacia of farmacias) {
+    const chip = crear('button', 'chip');
+    chip.type = 'button';
+    chip.append(crear('span', claseFarmacia(farmacia), farmacia));
+    chip.setAttribute('aria-pressed', String(filtroFarmacias.has(farmacia)));
+    chip.addEventListener('click', () => {
+      if (filtroFarmacias.has(farmacia)) filtroFarmacias.delete(farmacia);
+      else filtroFarmacias.add(farmacia);
+      if (filtroFarmacias.size === farmacias.length) filtroFarmacias = new Set(); // todas = sin filtro
+      cambiarFiltros();
+    });
+    grupoFarmacia.append(chip);
+  }
+  barra.append(grupoFarmacia);
+
+  // Marcas disponibles con las farmacias elegidas, de la más común a la menos común.
+  const conteo = new Map();
+  for (const p of productos) {
+    if (!pasaFiltros(p, { ignorarMarca: true })) continue;
+    const clave = claveMarca(p.marca);
+    if (nombresMarca.has(clave)) conteo.set(clave, (conteo.get(clave) || 0) + 1);
+  }
+  if (filtroMarca && !conteo.has(filtroMarca)) conteo.set(filtroMarca, 0);
+  const grupoMarca = crear('label', 'filtro-grupo');
+  grupoMarca.append(crear('span', 'filtro-etiqueta', 'Marca'));
+  const selector = crear('select', 'filtro-marca');
+  const opcionTodas = crear('option', null, `Todas las marcas (${conteo.size})`);
+  opcionTodas.value = '';
+  selector.append(opcionTodas);
+  [...conteo.entries()]
+    .sort((a, b) => b[1] - a[1] || nombresMarca.get(a[0]).localeCompare(nombresMarca.get(b[0]), 'es'))
+    .forEach(([clave, cuantos]) => {
+      const opcion = crear('option', null, `${nombresMarca.get(clave)} (${cuantos})`);
+      opcion.value = clave;
+      opcion.selected = clave === filtroMarca;
+      selector.append(opcion);
+    });
+  selector.addEventListener('change', () => {
+    filtroMarca = selector.value;
+    cambiarFiltros();
+  });
+  grupoMarca.append(selector);
+  barra.append(grupoMarca);
+
+  if (hayFiltros()) {
+    const quitar = crear('button', 'quitar-filtros', 'Quitar filtros');
+    quitar.type = 'button';
+    quitar.addEventListener('click', () => {
+      filtroFarmacias = new Set();
+      filtroMarca = '';
+      cambiarFiltros();
+    });
+    barra.append(quitar);
+  }
+  $filtros.replaceChildren(barra);
+}
+
+function textoFiltros() {
+  const partes = [];
+  if (filtroFarmacias.size) partes.push(listaDe([...filtroFarmacias]));
+  if (filtroMarca) partes.push(`marca ${nombresMarca.get(filtroMarca)}`);
+  return partes.join(', ');
+}
+
+function listaDe(nombres) {
+  if (nombres.length <= 1) return nombres.join('');
+  return `${nombres.slice(0, -1).join(', ')} y ${nombres[nombres.length - 1]}`;
 }
 
 async function iniciar() {
@@ -765,9 +966,10 @@ async function iniciar() {
   }
 
   farmacias = [...new Set(productos.map((p) => p.farmacia))].sort((a, b) => a.localeCompare(b, 'es'));
+  prepararMarcas();
   mostrarDatosGenerales();
   $busqueda.disabled = false;
-  $busqueda.value = consultaDeLaUrl();
+  leerUrl();
   $busqueda.addEventListener('input', () => {
     irA($busqueda.value, false);
     mostrarSugerencias();
@@ -797,7 +999,7 @@ async function iniciar() {
     }
   });
   window.addEventListener('popstate', () => {
-    $busqueda.value = consultaDeLaUrl();
+    leerUrl();
     mostrar();
   });
   document.getElementById('logo').addEventListener('click', (evento) => {

@@ -10,7 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="estilos.css">
+  <!-- Subir ?v= en cada cambio de CSS o JS para que los navegadores no usen la copia vieja -->
+  <link rel="stylesheet" href="estilos.css?v=6">
 </head>
 <body>
   <a class="saltar" href="#contenido">Saltar al contenido</a>
@@ -52,6 +53,7 @@
     <aside class="lateral" id="lateral" aria-label="Categorías"></aside>
 
     <main class="contenido" id="contenido" tabindex="-1">
+      <div class="filtros" id="filtros" aria-label="Filtros"></div>
       <div id="vista">
         <div class="cargando" aria-hidden="true">
           <div class="esqueleto"></div><div class="esqueleto"></div><div class="esqueleto"></div><div class="esqueleto"></div>
@@ -72,6 +74,6 @@
     <span>MediFácil compara precios; no reemplaza la indicación de tu médico o farmacéutico</span>
   </div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=6"></script>
 </body>
 </html>
