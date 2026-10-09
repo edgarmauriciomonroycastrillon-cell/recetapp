@@ -21,6 +21,14 @@ Web que compara precios de medicamentos entre farmacias de Colombia y muestra la
 - Nunca inventes precios ni edites precios a mano en el CSV o en el código. Si faltan datos, dilo; no los rellenes.
 - Cada precio que se muestre debe indicar la farmacia y la fecha del precio.
 
+### Actualización automática
+- GitHub Actions (`.github/workflows/actualizar-precios.yml`) corre todos los días a las 7:00 a. m. hora Colombia: `scraper.py` consulta La Rebaja, Locatel y Olímpica, y `unir.py` actualiza `data/precios.csv`. El commit del bot republica el sitio.
+- `data/precios.csv`, `data/scrapeado-hoy.csv` y `data/estado-scraping.json` los genera ese proceso: no se editan a mano. Para corregir datos se cambia el código del scraper.
+- La lista de los 20 medicamentos está en `SUSTANCIAS` y `TERMINOS` de `scraper.py`.
+- Respetar el `robots.txt` de cada farmacia (con comodines), identificarse con el User-Agent de RecetApp y esperar 1,5 s entre consultas.
+- Si una farmacia falla, se conservan sus precios anteriores con su fecha; nunca se rellenan.
+- Se descarta, no se corrige: combinaciones, formas líquidas o no orales, productos sin concentración o sin unidades, no disponibles, y productos cuyo nombre menciona una sustancia distinta a la de la ficha de la tienda.
+
 ### Comparación
 - Se compara por precio por unidad (tableta, cápsula, ml, etc.), no por precio de caja.
 - Solo se comparan productos con la misma sustancia (y misma concentración).

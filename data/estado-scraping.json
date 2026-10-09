@@ -1,0 +1,61 @@
+{
+  "fecha": "2026-10-08",
+  "farmacias": {
+    "La Rebaja": {
+      "consultas_ok": 22,
+      "consultas_error": 0,
+      "productos": 660,
+      "filas": 211,
+      "errores": [],
+      "descartes": {
+        "combinación": 213,
+        "no disponible": 101,
+        "forma líquida": 60,
+        "sobre": 6,
+        "sin concentración": 38,
+        "producto para gripa": 7,
+        "principio activo no coincide con el nombre": 1,
+        "fuera de la lista": 11,
+        "forma no oral sólida": 11,
+        "oferta de paquete": 3,
+        "sin principio activo en el nombre": 1
+      }
+    },
+    "Locatel": {
+      "consultas_ok": 22,
+      "consultas_error": 0,
+      "productos": 525,
+      "filas": 196,
+      "errores": [],
+      "descartes": {
+        "combinación": 156,
+        "no disponible": 31,
+        "fuera de la lista": 55,
+        "sin principio activo en el nombre": 52,
+        "forma líquida": 25,
+        "producto para gripa": 3,
+        "sin concentración": 5,
+        "oferta de paquete": 2,
+        "sin unidades": 4,
+        "forma no oral sólida": 11,
+        "sobre": 2
+      }
+    },
+    "Olímpica": {
+      "consultas_ok": 22,
+      "consultas_error": 0,
+      "productos": 203,
+      "filas": 126,
+      "errores": [],
+      "descartes": {
+        "combinación": 26,
+        "sin concentración": 3,
+        "sin unidades": 2,
+        "oferta de paquete": 2,
+        "sin principio activo en el nombre": 29,
+        "forma líquida": 13,
+        "forma no oral sólida": 2
+      }
+    }
+  }
+}

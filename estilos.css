@@ -186,6 +186,13 @@ a {
   animation: subir 0.7s 0.16s var(--facil) both;
 }
 
+.hero-nota {
+  margin: 0.45rem 0 0;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.72);
+  animation: subir 0.7s 0.2s var(--facil) both;
+}
+
 .punto {
   width: 8px;
   height: 8px;
