@@ -1,0 +1,292 @@
+/* Diseño celular primero: la base es una columna; las media queries amplían. */
+:root {
+  --fondo: #f4f6f8;
+  --superficie: #ffffff;
+  --texto: #1b2430;
+  --texto-suave: #556070;
+  --borde: #d8dee6;
+  --primario: #0b6e4f;
+  --primario-suave: #e3f4ed;
+  --acento: #0a4fa3;
+  --aviso-fondo: #1b2430;
+  --aviso-texto: #ffffff;
+  --radio: 12px;
+  --alto-aviso: 4.5rem;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+  /* Espacio para que el aviso fijo no tape la última tarjeta. */
+  padding-bottom: calc(var(--alto-aviso) + 1rem);
+}
+
+/* Encabezado con buscador, pegado arriba al hacer scroll */
+.encabezado {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--superficie);
+  border-bottom: 1px solid var(--borde);
+  padding: 0.75rem 1rem 1rem;
+}
+
+.marca-app {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--primario);
+}
+
+.fecha-datos {
+  margin: 0.1rem 0 0.75rem;
+  font-size: 0.875rem;
+  color: var(--texto-suave);
+}
+
+.buscador {
+  margin: 0;
+}
+
+.buscador-etiqueta {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.buscador input {
+  width: 100%;
+  font-size: 1rem; /* 16 px o más evita el zoom automático del iPhone */
+  padding: 0.75rem 0.9rem;
+  border: 2px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  color: var(--texto);
+}
+
+.buscador input:focus {
+  outline: none;
+  border-color: var(--primario);
+}
+
+.contenido {
+  padding: 1rem;
+}
+
+.estado {
+  margin: 0 0 1rem;
+  color: var(--texto-suave);
+}
+
+.estado:empty {
+  display: none;
+}
+
+.ejemplos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.ejemplo {
+  font: inherit;
+  font-size: 0.95rem;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--primario);
+  border-radius: 999px;
+  background: var(--superficie);
+  color: var(--primario);
+  cursor: pointer;
+}
+
+/* Grupos: principio activo + concentración */
+.grupo {
+  margin-bottom: 1.75rem;
+}
+
+.grupo-titulo {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.grupo-resumen {
+  margin: 0.1rem 0 0.75rem;
+  font-size: 0.9rem;
+  color: var(--texto-suave);
+}
+
+.tarjetas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+/* Tarjeta de producto */
+.tarjeta {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tarjeta.mas-barata {
+  border: 2px solid var(--primario);
+  background: var(--primario-suave);
+}
+
+.etiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.etiquetas:empty {
+  display: none;
+}
+
+.etiqueta {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+}
+
+.etiqueta-barata {
+  background: var(--primario);
+  color: #ffffff;
+}
+
+.etiqueta-coincide {
+  background: #e6eefa;
+  color: var(--acento);
+}
+
+.tarjeta-producto {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.tarjeta-datos {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.15rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.tarjeta-datos dt {
+  color: var(--texto-suave);
+}
+
+.tarjeta-datos dd {
+  margin: 0;
+}
+
+.precios {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.precios p {
+  margin: 0;
+}
+
+.precio-unidad {
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.precio-unidad small {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--texto-suave);
+}
+
+.precio-unidad.sin-dato {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+.precio-caja {
+  font-size: 0.9rem;
+  color: var(--texto-suave);
+}
+
+.pie-tarjeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+}
+
+.pie-tarjeta a {
+  color: var(--acento);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Aviso siempre visible */
+.aviso {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
+  min-height: var(--alto-aviso);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.6rem 1rem calc(0.6rem + env(safe-area-inset-bottom));
+  background: var(--aviso-fondo);
+  color: var(--aviso-texto);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* Pantallas más grandes */
+@media (min-width: 640px) {
+  :root {
+    --alto-aviso: 3rem;
+  }
+
+  .tarjetas {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1000px) {
+  .encabezado,
+  .contenido {
+    padding-left: max(1rem, calc((100% - 1100px) / 2));
+    padding-right: max(1rem, calc((100% - 1100px) / 2));
+  }
+
+  .tarjetas {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
