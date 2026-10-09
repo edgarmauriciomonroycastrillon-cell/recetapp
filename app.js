@@ -11,6 +11,7 @@ const formatoPesos = new Intl.NumberFormat('es-CO', {
 });
 // es-CO escribe "$ 12.500" (con espacio); en Colombia se usa "$12.500".
 const pesos = { format: (valor) => formatoPesos.format(valor).replace(/\s/g, '') };
+const porcentajeCO = new Intl.NumberFormat('es-CO', { style: 'percent', maximumFractionDigits: 0 });
 
 let productos = [];
 
@@ -175,7 +176,7 @@ function crear(etiqueta, clase, texto) {
   return el;
 }
 
-function crearTarjeta(p, esMasBarata, coincide) {
+function crearTarjeta(p, esMasBarata, coincide, grupo) {
   const li = crear('li', 'tarjeta' + (esMasBarata ? ' mas-barata' : ''));
 
   const etiquetas = crear('div', 'etiquetas');
@@ -211,16 +212,86 @@ function crearTarjeta(p, esMasBarata, coincide) {
 
   const pie = crear('div', 'pie-tarjeta');
   pie.append(crear('span', null, `${p.farmacia} · precio del ${fechaCorta(p.fecha)}`));
-  if (p.url) {
-    const enlace = crear('a', null, 'Ver en la farmacia');
-    enlace.href = p.url;
-    enlace.target = '_blank';
-    enlace.rel = 'noopener noreferrer';
-    pie.append(enlace);
-  }
+  if (p.url) pie.append(crearEnlace(p.url, 'Ver en la farmacia'));
   li.append(pie);
 
+  // "Misma sustancia, más barato": se abre al tocar la tarjeta.
+  const boton = crear('button', 'boton-alternativa', 'Misma sustancia, más barato');
+  boton.type = 'button';
+  boton.setAttribute('aria-expanded', 'false');
+  const panel = crear('div', 'alternativa');
+  panel.hidden = true;
+  boton.addEventListener('click', () => {
+    const abrir = panel.hidden;
+    if (abrir && !panel.hasChildNodes()) panel.append(...contenidoAlternativa(p, grupo));
+    panel.hidden = !abrir;
+    boton.setAttribute('aria-expanded', String(abrir));
+    li.classList.toggle('abierta', abrir);
+  });
+  li.addEventListener('click', (evento) => {
+    if (evento.target.closest('a, button, .alternativa')) return;
+    boton.click();
+  });
+  li.append(boton, panel);
+
   return li;
+}
+
+function crearEnlace(url, texto) {
+  const enlace = crear('a', null, texto);
+  enlace.href = url;
+  enlace.target = '_blank';
+  enlace.rel = 'noopener noreferrer';
+  return enlace;
+}
+
+// Compara el producto con el más barato por unidad de su grupo (misma sustancia y concentración).
+function contenidoAlternativa(p, grupo) {
+  const nombreGrupo = `${p.principio_activo} ${p.concentracion}`;
+
+  if (p.precio_unidad == null || !p.unidades) {
+    return [
+      crear('p', null,
+        'Este producto no informa cuántas unidades trae, así que no se puede comparar ' +
+        'su precio por unidad con las demás opciones.'),
+    ];
+  }
+
+  const masBarato = grupo.find((otro) => otro.precio_unidad != null); // el grupo viene ordenado
+  if (p.precio_unidad <= masBarato.precio_unidad) {
+    return [
+      crear('p', 'alternativa-ya', `Este ya es el más barato por unidad entre las ${grupo.length} opciones de ${nombreGrupo}.`),
+    ];
+  }
+
+  const ahorroUnidad = p.precio_unidad - masBarato.precio_unidad;
+  const porcentaje = ahorroUnidad / p.precio_unidad;
+  const costoActual = p.precio_unidad * p.unidades;
+  const costoBarato = masBarato.precio_unidad * p.unidades;
+
+  const resumen = crear('p', 'alternativa-ahorro');
+  resumen.append(
+    crear('strong', null, `Ahorras ${porcentajeCO.format(porcentaje)} por unidad`),
+    `: ${pesos.format(masBarato.precio_unidad)} en vez de ${pesos.format(p.precio_unidad)}.`
+  );
+
+  const mismasUnidades = crear('p', null,
+    `Por las mismas ${p.unidades} unidades pagarías ${pesos.format(costoBarato)} ` +
+    `en vez de ${pesos.format(costoActual)}: ahorras ${pesos.format(costoActual - costoBarato)}.`);
+
+  const producto = crear('div', 'alternativa-producto');
+  producto.append(
+    crear('p', 'alternativa-nombre', masBarato.producto),
+    crear('p', null,
+      `${masBarato.farmacia} · ${masBarato.marca || 'sin marca'} · ${masBarato.presentacion || 'sin presentación'}`),
+    crear('p', null,
+      `${pesos.format(masBarato.precio_unidad)} por unidad · Precio: ${pesos.format(masBarato.precio)}` +
+      (masBarato.unidades ? ` (${masBarato.unidades} unidades)` : '')),
+    crear('p', 'alternativa-fecha', `${masBarato.farmacia} · precio del ${fechaCorta(masBarato.fecha)}`)
+  );
+  if (masBarato.url) producto.append(crearEnlace(masBarato.url, `Ver en ${masBarato.farmacia}`));
+
+  return [resumen, mismasUnidades, producto];
 }
 
 function crearGrupo(lista, coincidencias) {
@@ -236,7 +307,7 @@ function crearGrupo(lista, coincidencias) {
   const ul = crear('ul', 'tarjetas');
   for (const p of lista) {
     const esMasBarata = minimo != null && p.precio_unidad === minimo;
-    ul.append(crearTarjeta(p, esMasBarata, coincidencias.has(p)));
+    ul.append(crearTarjeta(p, esMasBarata, coincidencias.has(p), lista));
   }
   seccion.append(ul);
   return seccion;
