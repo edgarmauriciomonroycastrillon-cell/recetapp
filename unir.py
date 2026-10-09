@@ -72,7 +72,7 @@ def main():
 
     resultado.sort(key=orden)
     with PRECIOS.open("w", encoding="utf-8", newline="") as archivo:
-        escritor = csv.DictWriter(archivo, fieldnames=COLUMNAS)
+        escritor = csv.DictWriter(archivo, fieldnames=COLUMNAS, lineterminator="\n")  # igual en Windows y Linux
         escritor.writeheader()
         escritor.writerows(resultado)
     print(f"{len(resultado)} filas en {PRECIOS} (partiendo de {origen.name})")

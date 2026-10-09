@@ -369,7 +369,7 @@ def main():
     todas.sort(key=lambda f: (f["principio_activo"], f["concentracion"], f["precio_unidad"], f["farmacia"]))
     DATOS.mkdir(exist_ok=True)
     with SALIDA.open("w", encoding="utf-8", newline="") as archivo:
-        escritor = csv.DictWriter(archivo, fieldnames=COLUMNAS)
+        escritor = csv.DictWriter(archivo, fieldnames=COLUMNAS, lineterminator="\n")  # igual en Windows y Linux
         escritor.writeheader()
         escritor.writerows(todas)
     ESTADO.write_text(

@@ -1,0 +1,3 @@
+# Los CSV siempre con fin de línea LF, los genere Windows o el bot de GitHub (Linux)
+*.csv text eol=lf
+*.json text eol=lf
