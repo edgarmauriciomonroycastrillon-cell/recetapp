@@ -21,7 +21,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 USER_AGENT = (
-    "RecetApp/0.1 (comparador de precios de medicamentos; "
+    "MediFacil/0.1 (comparador de precios de medicamentos; "
     "+https://github.com/edgarmauriciomonroycastrillon-cell/recetapp)"
 )
 PAUSA_SEGUNDOS = 1.5
@@ -71,7 +71,7 @@ SALIDA = DATOS / "scrapeado-hoy.csv"
 ESTADO = DATOS / "estado-scraping.json"
 COLUMNAS = [
     "fecha", "farmacia", "principio_activo", "concentracion", "producto", "marca",
-    "presentacion", "unidades", "precio", "precio_lista", "precio_unidad", "url",
+    "presentacion", "unidades", "precio", "precio_lista", "precio_unidad", "url", "imagen",
 ]
 
 # Combinaciones: "+", "/", "HCT" o una segunda sustancia conocida en el nombre.
@@ -130,7 +130,7 @@ def pedir(url):
 # ---------- robots.txt ----------
 
 def reglas_robots(texto):
-    """Reglas (permitir, patrón) de los grupos que aplican a nosotros ("*" o "RecetApp")."""
+    """Reglas (permitir, patrón) de los grupos que aplican a nosotros ("*" o "MediFacil")."""
     reglas, agentes, en_reglas = [], [], False
     for linea in texto.splitlines():
         linea = linea.split("#", 1)[0].strip()
@@ -199,6 +199,14 @@ def unidades_en_nombre(*textos):
                 forma = coincidencia.group(2) or ""
                 return int(coincidencia.group(1)), f"{envase} X {coincidencia.group(1)} {forma}".strip()
     return None, ""
+
+
+def imagen_de(item):
+    """Foto del producto en el CDN de la farmacia, pedida a 300x300 px (VTEX: /ids/ID-300-300/)."""
+    imagenes = item.get("images") or []
+    url = (imagenes[0].get("imageUrl") or "") if imagenes else ""
+    url = url.split("?", 1)[0]
+    return re.sub(r"(/arquivos/ids/\d+)(?:-\d+-(?:\d+|auto))?/", r"\g<1>-300-300/", url)
 
 
 def principio_activo(producto, campo, nombre):
@@ -302,6 +310,7 @@ def filas_de(farmacia, producto, hoy, descartes):
             "precio_lista": round(oferta.get("ListPrice") or precio),
             "precio_unidad": round(precio / unidades, 2),
             "url": producto.get("link", ""),
+            "imagen": imagen_de(item),
         })
     return filas
 

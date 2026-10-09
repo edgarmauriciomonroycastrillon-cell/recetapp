@@ -1,8 +1,32 @@
-// RecetApp: lee data/precios.csv en el navegador, busca y agrupa por principio activo y concentración.
+// MediFácil: lee data/precios.csv en el navegador, muestra el catálogo y compara por precio por unidad.
 
 const RUTA_DATOS = 'data/precios.csv';
 const MIN_LETRAS = 2;
-const EJEMPLOS = ['losartán', 'Dolex', 'acetaminofén', 'atorvastatina', 'Cozaar'];
+
+// Nombre para mostrar, categoría y otros nombres con que la gente busca cada principio activo.
+const MEDICAMENTOS = {
+  LOSARTAN: { nombre: 'Losartán', categoria: 'Presión y corazón' },
+  AMLODIPINO: { nombre: 'Amlodipino', categoria: 'Presión y corazón' },
+  ENALAPRIL: { nombre: 'Enalapril', categoria: 'Presión y corazón' },
+  'ACIDO ACETILSALICILICO': { nombre: 'Ácido acetilsalicílico', categoria: 'Presión y corazón', alias: 'aspirina asa' },
+  ATORVASTATINA: { nombre: 'Atorvastatina', categoria: 'Colesterol' },
+  ROSUVASTATINA: { nombre: 'Rosuvastatina', categoria: 'Colesterol' },
+  METFORMINA: { nombre: 'Metformina', categoria: 'Diabetes' },
+  ACETAMINOFEN: { nombre: 'Acetaminofén', categoria: 'Dolor y fiebre', alias: 'paracetamol' },
+  IBUPROFENO: { nombre: 'Ibuprofeno', categoria: 'Dolor y fiebre' },
+  NAPROXENO: { nombre: 'Naproxeno', categoria: 'Dolor y fiebre' },
+  DICLOFENACO: { nombre: 'Diclofenaco', categoria: 'Dolor y fiebre' },
+  OMEPRAZOL: { nombre: 'Omeprazol', categoria: 'Estómago' },
+  ESOMEPRAZOL: { nombre: 'Esomeprazol', categoria: 'Estómago' },
+  LORATADINA: { nombre: 'Loratadina', categoria: 'Alergias y asma' },
+  CETIRIZINA: { nombre: 'Cetirizina', categoria: 'Alergias y asma' },
+  MONTELUKAST: { nombre: 'Montelukast', categoria: 'Alergias y asma' },
+  AMOXICILINA: { nombre: 'Amoxicilina', categoria: 'Antibióticos' },
+  AZITROMICINA: { nombre: 'Azitromicina', categoria: 'Antibióticos' },
+  LEVOTIROXINA: { nombre: 'Levotiroxina', categoria: 'Tiroides' },
+  SERTRALINA: { nombre: 'Sertralina', categoria: 'Salud mental' },
+};
+const TODAS = 'Todos';
 
 const formatoPesos = new Intl.NumberFormat('es-CO', {
   style: 'currency',
@@ -16,13 +40,20 @@ const numeroCO = new Intl.NumberFormat('es-CO');
 
 let productos = [];
 let farmacias = []; // nombres en orden fijo, para darle a cada una su color
+let categoriaActiva = TODAS;
+let modoCatalogo = (() => {
+  try {
+    return localStorage.getItem('medifacil-vista') === 'lista' ? 'lista' : 'cuadricula';
+  } catch (error) {
+    return 'cuadricula';
+  }
+})();
 
 const $busqueda = document.getElementById('busqueda');
-const $estado = document.getElementById('estado');
-const $resultados = document.getElementById('resultados');
-const $fechaTexto = document.getElementById('fecha-texto');
-const $cifras = document.getElementById('cifras');
-const $indice = document.getElementById('indice');
+const $vista = document.getElementById('vista');
+const $lateral = document.getElementById('lateral');
+const $franja = document.getElementById('franja');
+const $actualizado = document.getElementById('actualizado');
 
 // ---------- Datos ----------
 
@@ -85,6 +116,11 @@ function normalizar(texto) {
     .trim();
 }
 
+function infoMedicamento(principio) {
+  const t = (principio || '').toLowerCase();
+  return MEDICAMENTOS[principio] || { nombre: t.charAt(0).toUpperCase() + t.slice(1), categoria: 'Otros' };
+}
+
 function convertirFilas(filas) {
   const [cabecera, ...resto] = filas;
   return resto.map((valores) => {
@@ -96,7 +132,10 @@ function convertirFilas(filas) {
     p.precio_lista = aNumero(p.precio_lista);
     p.unidades = aNumero(p.unidades);
     p.precio_unidad = aNumero(p.precio_unidad);
-    p.texto_busqueda = normalizar([p.producto, p.marca, p.principio_activo].join(' '));
+    const info = infoMedicamento(p.principio_activo);
+    p.texto_busqueda = normalizar(
+      [p.producto, p.marca, p.principio_activo, info.nombre, info.alias || ''].join(' ')
+    );
     return p;
   });
 }
@@ -115,7 +154,12 @@ function fechaCorta(iso) {
   return aFecha(iso).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-// Concentración en miligramos para ordenar (50 MG antes que 100 MG).
+// "50 MG" → "50 mg".
+function dosis(concentracion) {
+  return (concentracion || '').replace(/\b(MCG|MG|G|UI)\b/, (u) => (u === 'UI' ? 'UI' : u.toLowerCase()));
+}
+
+// Concentración en miligramos para ordenar (50 mg antes que 100 mg).
 function concentracionEnMg(concentracion) {
   const m = /([\d.]+)\s*(MCG|MG|G|UI)?/i.exec(concentracion || '');
   if (!m) return Infinity;
@@ -157,10 +201,38 @@ function buscar(consulta) {
       .map((lista) => lista.sort(porPrecioUnidad))
       .sort(
         (a, b) =>
-          a[0].principio_activo.localeCompare(b[0].principio_activo, 'es') ||
+          infoMedicamento(a[0].principio_activo).nombre.localeCompare(infoMedicamento(b[0].principio_activo).nombre, 'es') ||
           concentracionEnMg(a[0].concentracion) - concentracionEnMg(b[0].concentracion)
       ),
   };
+}
+
+// Un resumen por principio activo para el catálogo.
+function resumenCatalogo() {
+  const porPrincipio = new Map();
+  for (const p of productos) {
+    if (!porPrincipio.has(p.principio_activo)) porPrincipio.set(p.principio_activo, []);
+    porPrincipio.get(p.principio_activo).push(p);
+  }
+  return [...porPrincipio.entries()]
+    .map(([principio, lista]) => {
+      const ordenada = [...lista].sort(porPrecioUnidad);
+      const masBarato = ordenada.find((p) => p.precio_unidad != null);
+      const conFoto = ordenada.find((p) => p.imagen) || null;
+      const concentraciones = [...new Set(lista.map((p) => p.concentracion))].sort(
+        (a, b) => concentracionEnMg(a) - concentracionEnMg(b)
+      );
+      return {
+        principio,
+        ...infoMedicamento(principio),
+        precios: lista.length,
+        farmacias: new Set(lista.map((p) => p.farmacia)).size,
+        concentraciones,
+        masBarato,
+        imagen: conFoto ? conFoto.imagen : '',
+      };
+    })
+    .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
 }
 
 // ---------- Utilidades de interfaz ----------
@@ -172,45 +244,31 @@ function crear(etiqueta, clase, texto) {
   return el;
 }
 
-// Íconos propios (SVG fijo, nunca datos del CSV).
-const ICONOS = {
-  tableta:
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M6.5 12h11" stroke-linecap="round"/></svg>',
-  capsula:
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><g transform="rotate(-45 12 12)"><rect x="3" y="8" width="18" height="8" rx="4"/><path d="M12 8v8"/></g></svg>',
-  gel:
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 3h10l-1 4H8z"/><path d="M8 7h8l1.5 13a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1z"/><path d="M10 12h4" stroke-linecap="round"/></svg>',
-  caja:
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg>',
-  flecha:
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
-  check:
-    '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
-  buscar:
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>',
-  balanza:
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 21h14M4 8h16"/><path d="M7 8l-3 6a3 3 0 0 0 6 0zM17 8l-3 6a3 3 0 0 0 6 0z"/></svg>',
-  alcancia:
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a7 6 0 0 1 13-3h3v4l-2 1v3h-3v2h-3v-2H9v2H6v-3a6 6 0 0 1-2-4z"/><circle cx="15" cy="11" r=".6" fill="currentColor"/><path d="M10 5.5a2 2 0 1 1 3-1.5"/></svg>',
-};
+const ICONO_CAJA =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg>';
+const ICONO_FLECHA =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
 
-const ILUSTRACION_VACIO =
-  '<svg viewBox="0 0 160 120" aria-hidden="true"><circle cx="70" cy="56" r="34" fill="none" stroke="currentColor" stroke-width="8" opacity=".25"/><path d="M95 81l22 22" stroke="currentColor" stroke-width="10" stroke-linecap="round" opacity=".25"/><rect x="48" y="46" width="44" height="20" rx="10" fill="#a5b4fc" transform="rotate(-25 70 56)"/><path d="M70 46h12a10 10 0 0 1 0 20H70z" fill="#34d399" transform="rotate(-25 70 56)"/></svg>';
-
-function icono(nombre) {
-  const span = crear('span', 'forma');
-  span.setAttribute('aria-hidden', 'true');
-  span.innerHTML = ICONOS[nombre];
-  return span;
-}
-
-// Adivina la forma (tableta, cápsula, gel) a partir del nombre y la presentación.
-function formaDe(p) {
-  const texto = normalizar(`${p.presentacion} ${p.producto}`);
-  if (/\b(gel|emulgel|crema|tubo|unguento)\b|\d\s*g\b/.test(texto) && !/activgel|capsula/.test(texto)) return 'gel';
-  if (/\b(cap|caps|capsula|capsulas|cbg|softgel|activgel|liquidas?)\b/.test(texto)) return 'capsula';
-  if (/\b(tab|tabs|tableta|tabletas|comp|comprimido|comprimidos|grageas?|masticables?)\b/.test(texto)) return 'tableta';
-  return 'caja';
+// Foto del producto (del catálogo de la farmacia); si no carga, un ícono de caja.
+function foto(url, alt) {
+  const marco = crear('div', 'foto');
+  const ponerIcono = () => {
+    marco.innerHTML = ICONO_CAJA;
+    marco.setAttribute('aria-hidden', 'true');
+  };
+  if (!url) {
+    ponerIcono();
+    return marco;
+  }
+  const img = document.createElement('img');
+  img.src = url;
+  img.alt = alt;
+  img.loading = 'lazy';
+  img.decoding = 'async';
+  img.referrerPolicy = 'no-referrer';
+  img.addEventListener('error', ponerIcono, { once: true });
+  marco.append(img);
+  return marco;
 }
 
 function claseFarmacia(nombre) {
@@ -218,123 +276,188 @@ function claseFarmacia(nombre) {
   return `farmacia farmacia-${(i < 0 ? 0 : i) % 4}`;
 }
 
-// "LOSARTAN" → "Losartan"; "ACIDO ACETILSALICILICO" → "Acido acetilsalicilico".
-function nombreSustancia(texto) {
-  const t = (texto || '').toLowerCase();
-  return t.charAt(0).toUpperCase() + t.slice(1);
-}
-
 function idGrupo(p) {
   return 'g-' + normalizar(`${p.principio_activo}-${p.concentracion}`).replace(/[^a-z0-9]+/g, '-');
 }
 
-function crearEnlace(url, texto) {
-  const enlace = crear('a', null, texto);
+function enlaceTienda(url, texto, clase = 'boton') {
+  const enlace = crear('a', clase, texto);
   enlace.href = url;
   enlace.target = '_blank';
   enlace.rel = 'noopener noreferrer';
   return enlace;
 }
 
-// ---------- Encabezado ----------
+function listaFarmacias() {
+  if (farmacias.length <= 1) return farmacias.join('');
+  return `${farmacias.slice(0, -1).join(', ')} y ${farmacias[farmacias.length - 1]}`;
+}
 
 function mostrarDatosGenerales() {
   const fechas = [...new Set(productos.map((p) => p.fecha).filter(Boolean))].sort();
-  if (fechas.length === 0) {
-    $fechaTexto.textContent = 'Sin fecha en los datos';
-  } else if (fechas.length === 1) {
-    $fechaTexto.textContent = `Precios consultados el ${fechaLarga(fechas[0])}`;
-  } else {
-    $fechaTexto.textContent =
-      `Precios consultados entre el ${fechaLarga(fechas[0])} y el ${fechaLarga(fechas[fechas.length - 1])}`;
-  }
+  const ultima = fechas[fechas.length - 1];
+  const sustancias = new Set(productos.map((p) => p.principio_activo)).size;
 
-  const sustancias = new Set(productos.map((p) => p.principio_activo));
-  const cifras = [
-    [numeroCO.format(productos.length), 'precios'],
-    [farmacias.length, farmacias.length === 1 ? 'farmacia' : 'farmacias'],
-    [sustancias.size, 'principios activos'],
-  ];
-  $cifras.replaceChildren(
-    ...cifras.map(([valor, texto], i) => {
-      const li = crear('li');
-      li.style.animationDelay = `${240 + i * 80}ms`;
-      li.append(crear('strong', null, String(valor)), crear('span', null, texto));
-      return li;
-    })
+  $franja.replaceChildren(
+    'Comparamos ',
+    crear('strong', null, `${numeroCO.format(productos.length)} precios`),
+    ' de ',
+    crear('strong', null, `${sustancias} medicamentos`),
+    ` en ${listaFarmacias()}.`,
+    fechas.length > 1
+      ? ` Precios consultados entre el ${fechaLarga(fechas[0])} y el ${fechaLarga(ultima)}.`
+      : ultima ? ` Precios consultados el ${fechaLarga(ultima)}.` : ''
   );
+  $actualizado.replaceChildren(
+    ultima ? `Precios del ${fechaCorta(ultima)}` : '',
+    crear('span', 'solo-escritorio', 'Se actualizan cada día a las 7:00 a. m.')
+  );
+  document.getElementById('fuentes').textContent = listaFarmacias();
 }
 
-// ---------- Tarjetas ----------
+// ---------- Catálogo ----------
 
-function crearTarjeta(p, info, indice) {
-  const { grupo, minimo, maximo, coincide } = info;
+function mostrarCatalogo() {
+  const resumen = resumenCatalogo();
+  const categorias = [...new Set(resumen.map((m) => m.categoria))].sort((a, b) => a.localeCompare(b, 'es'));
+  if (categoriaActiva !== TODAS && !categorias.includes(categoriaActiva)) categoriaActiva = TODAS;
+
+  // Lateral: categorías
+  const ul = crear('ul');
+  for (const categoria of [TODAS, ...categorias]) {
+    const cuantos = categoria === TODAS ? resumen.length : resumen.filter((m) => m.categoria === categoria).length;
+    const boton = crear('button', 'filtro');
+    boton.type = 'button';
+    boton.setAttribute('aria-pressed', String(categoria === categoriaActiva));
+    boton.append(crear('span', null, categoria), crear('small', null, String(cuantos)));
+    boton.addEventListener('click', () => {
+      categoriaActiva = categoria;
+      mostrarCatalogo();
+    });
+    const li = crear('li');
+    li.append(boton);
+    ul.append(li);
+  }
+  $lateral.setAttribute('aria-label', 'Categorías');
+  $lateral.replaceChildren(crear('p', 'lateral-titulo', 'Categorías'), ul);
+
+  // Vista: tarjetas de medicamentos
+  const visibles = resumen.filter((m) => categoriaActiva === TODAS || m.categoria === categoriaActiva);
+  const cabeza = crear('div', 'vista-cabeza');
+  cabeza.append(
+    crear('h1', 'vista-titulo', categoriaActiva === TODAS ? 'Medicamentos disponibles' : categoriaActiva),
+    crear('p', 'vista-sub',
+      `${visibles.length} ${visibles.length === 1 ? 'medicamento' : 'medicamentos'} con precios en ${listaFarmacias()}. ` +
+      'Elige uno para ver y comparar todos sus precios.')
+  );
+
+  // Ver como cuadrícula o como lista (se recuerda en este navegador)
+  const selector = crear('div', 'ver-como');
+  selector.setAttribute('role', 'group');
+  selector.setAttribute('aria-label', 'Ver como');
+  for (const [valor, texto] of [['cuadricula', 'Cuadrícula'], ['lista', 'Lista']]) {
+    const boton = crear('button', 'ver-como-boton', texto);
+    boton.type = 'button';
+    boton.setAttribute('aria-pressed', String(modoCatalogo === valor));
+    boton.addEventListener('click', () => {
+      modoCatalogo = valor;
+      try {
+        localStorage.setItem('medifacil-vista', valor);
+      } catch (error) {
+        // sin almacenamiento (modo privado): solo no se recuerda
+      }
+      mostrarCatalogo();
+    });
+    selector.append(boton);
+  }
+  cabeza.append(selector);
+
+  const lista = crear('ul', 'catalogo' + (modoCatalogo === 'lista' ? ' en-lista' : ''));
+  for (const m of visibles) {
+    const boton = crear('button', 'medicamento');
+    boton.type = 'button';
+    boton.append(foto(m.imagen, `Caja de ${m.nombre}`));
+    const info = crear('span', 'medicamento-info');
+    info.append(
+      crear('span', 'medicamento-categoria', m.categoria),
+      crear('span', 'medicamento-nombre', m.nombre),
+      crear('span', 'medicamento-dosis', m.concentraciones.map(dosis).join(' · '))
+    );
+    const precio = crear('span', 'medicamento-precio');
+    if (m.masBarato) {
+      precio.append('Desde ', crear('strong', null, `${pesos.format(m.masBarato.precio_unidad)} por unidad`));
+    }
+    precio.append(crear('span', 'medicamento-cuantos',
+      `${m.precios} precios en ${m.farmacias} ${m.farmacias === 1 ? 'farmacia' : 'farmacias'}`));
+    info.append(precio);
+    boton.append(info);
+    boton.addEventListener('click', () => irA(m.nombre, true));
+    const li = crear('li');
+    li.append(boton);
+    lista.append(li);
+  }
+  $vista.replaceChildren(cabeza, lista);
+}
+
+// ---------- Resultados ----------
+
+function crearOferta(p, info, indice) {
+  const { grupo, minimo, coincide } = info;
   const esMasBarata = minimo != null && p.precio_unidad === minimo;
 
-  const li = crear('li', 'tarjeta' + (esMasBarata ? ' mas-barata' : ''));
-  li.style.setProperty('--i', indice);
+  const li = crear('li', 'oferta' + (esMasBarata ? ' mas-barata' : ''));
+  const fila = crear('div', 'oferta-fila');
 
-  // Cabeza: ícono de forma, farmacia y etiquetas
-  const cabeza = crear('div', 'tarjeta-cabeza');
-  cabeza.append(icono(formaDe(p)), crear('span', claseFarmacia(p.farmacia), p.farmacia));
-  const etiquetas = crear('div', 'etiquetas');
-  if (esMasBarata) etiquetas.append(crear('span', 'etiqueta etiqueta-barata', 'Más barata por unidad'));
-  if (coincide) etiquetas.append(crear('span', 'etiqueta etiqueta-coincide', 'Coincide'));
-  cabeza.append(etiquetas);
-  li.append(cabeza);
+  fila.append(foto(p.imagen, p.producto));
 
-  li.append(crear('h3', 'tarjeta-producto', p.producto));
+  const datos = crear('div', 'oferta-info');
+  const insignias = crear('div', 'oferta-insignias');
+  if (esMasBarata) insignias.append(crear('span', 'insignia insignia-barata', 'Precio más bajo'));
+  if (coincide) insignias.append(crear('span', 'insignia insignia-coincide', 'Coincide con tu búsqueda'));
+  if (insignias.hasChildNodes()) datos.append(insignias);
+  datos.append(crear('h3', 'oferta-producto', p.producto));
+  const detalle = crear('p', 'oferta-detalle');
+  detalle.append(
+    crear('span', claseFarmacia(p.farmacia), p.farmacia),
+    ` · ${p.marca || 'Sin marca'} · ${p.presentacion || 'Sin presentación'} · precio del ${fechaCorta(p.fecha)}`
+  );
+  datos.append(detalle);
+  fila.append(datos);
 
-  const meta = crear('p', 'tarjeta-meta');
-  meta.append('Marca ', crear('strong', null, p.marca || '—'), ` · ${p.presentacion || 'Sin presentación'}`);
-  li.append(meta);
-
-  // Precio por unidad (lo que se compara) y precio de la caja
-  const bloque = crear('div', 'precio-bloque');
+  const precio = crear('div', 'oferta-precio');
   if (p.precio_unidad != null) {
-    const unidad = crear('p', 'precio-unidad', pesos.format(p.precio_unidad));
-    unidad.append(' ', crear('small', null, 'por unidad'));
-    bloque.append(unidad);
-    if (!esMasBarata && minimo != null) {
-      bloque.append(crear('span', 'diferencia', `+${pesos.format(p.precio_unidad - minimo)} por unidad`));
-    }
+    const unidad = crear('span', 'precio-unidad', pesos.format(p.precio_unidad));
+    unidad.append(' ', crear('small', null, 'c/u'));
+    precio.append(unidad);
   } else {
-    bloque.append(crear('p', 'precio-unidad sin-dato', 'Sin precio por unidad'));
+    precio.append(crear('span', 'precio-unidad sin-dato', 'Sin precio por unidad'));
   }
-  li.append(bloque);
-
   if (p.precio != null) {
-    const caja = p.unidades ? ` · ${p.unidades} unidades` : '';
-    li.append(crear('p', 'precio-caja', `Precio: ${pesos.format(p.precio)}${caja}`));
+    precio.append(crear('span', 'precio-caja',
+      `${pesos.format(p.precio)}${p.unidades ? ` por ${p.unidades} unidades` : ''}`));
   }
-
-  // Medidor: qué tan caro es frente a la opción más cara del grupo
-  if (p.precio_unidad != null && maximo) {
-    const medidor = crear('div', 'medidor');
-    medidor.setAttribute('aria-hidden', 'true');
-    const barra = crear('span');
-    barra.style.setProperty('--relativo', `${Math.max(4, (p.precio_unidad / maximo) * 100)}%`);
-    medidor.append(barra);
-    li.append(medidor);
+  if (!esMasBarata && minimo != null && p.precio_unidad != null) {
+    precio.append(crear('span', 'diferencia', `+${pesos.format(p.precio_unidad - minimo)} c/u`));
   }
+  fila.append(precio);
 
-  const pie = crear('div', 'pie-tarjeta');
-  pie.append(crear('span', null, `${p.farmacia} · precio del ${fechaCorta(p.fecha)}`));
-  if (p.url) pie.append(crearEnlace(p.url, 'Ver en la farmacia'));
-  li.append(pie);
-
-  // "Misma sustancia, más barato": se abre al tocar la tarjeta.
-  const boton = crear('button', 'boton-alternativa');
+  const acciones = crear('div', 'oferta-acciones');
+  const boton = crear('button', 'boton boton-alternativa', 'Más barato');
   boton.type = 'button';
   boton.setAttribute('aria-expanded', 'false');
-  boton.append(crear('span', null, 'Misma sustancia, más barato'));
-  boton.insertAdjacentHTML('beforeend', ICONOS.flecha);
+  boton.insertAdjacentHTML('beforeend', ICONO_FLECHA);
+  acciones.append(boton);
+  if (p.url) acciones.append(enlaceTienda(p.url, 'Ver en tienda', 'boton boton-solido'));
+  fila.append(acciones);
+  li.append(fila);
 
+  // "Misma sustancia, más barato": se abre al tocar la fila.
   const envoltura = crear('div', 'alternativa-envoltura');
   const panel = crear('div', 'alternativa');
   const interior = crear('div', 'alternativa-interior');
   panel.append(interior);
   envoltura.append(panel);
+  li.append(envoltura);
 
   boton.addEventListener('click', () => {
     const abrir = !li.classList.contains('abierta');
@@ -342,67 +465,63 @@ function crearTarjeta(p, info, indice) {
     li.classList.toggle('abierta', abrir);
     boton.setAttribute('aria-expanded', String(abrir));
   });
-  li.addEventListener('click', (evento) => {
-    if (evento.target.closest('a, button, .alternativa')) return;
+  fila.addEventListener('click', (evento) => {
+    if (evento.target.closest('a, button')) return;
     boton.click();
   });
-  li.append(boton, envoltura);
-
+  li.style.animationDelay = `${Math.min(indice, 10) * 20}ms`;
   return li;
 }
 
 // Compara el producto con el más barato por unidad de su grupo (misma sustancia y concentración).
 function contenidoAlternativa(p, grupo) {
-  const nombreGrupo = `${nombreSustancia(p.principio_activo)} ${p.concentracion}`;
+  const titulo = crear('p', 'alternativa-titulo', 'Misma sustancia, más barato');
+  const nombreGrupo = `${infoMedicamento(p.principio_activo).nombre} ${dosis(p.concentracion)}`;
 
   if (p.precio_unidad == null || !p.unidades) {
-    return [
-      crear('p', 'alternativa-nota',
-        'Este producto no informa cuántas unidades trae, así que no se puede comparar ' +
-        'su precio por unidad con las demás opciones.'),
-    ];
+    return [titulo, crear('p', null,
+      'Este producto no informa cuántas unidades trae, así que no se puede comparar ' +
+      'su precio por unidad con las demás opciones.')];
   }
 
   const masBarato = grupo.find((otro) => otro.precio_unidad != null); // el grupo viene ordenado
   if (p.precio_unidad <= masBarato.precio_unidad) {
-    const ya = crear('p', 'alternativa-ya');
-    ya.insertAdjacentHTML('afterbegin', ICONOS.check);
-    ya.append(`Este ya es el más barato por unidad entre las ${grupo.length} opciones de ${nombreGrupo}.`);
-    return [ya];
+    return [titulo, crear('p', 'ya-barato',
+      `Este ya es el más barato por unidad entre las ${grupo.length} opciones de ${nombreGrupo}.`)];
   }
 
-  const ahorroUnidad = p.precio_unidad - masBarato.precio_unidad;
-  const porcentaje = ahorroUnidad / p.precio_unidad;
+  const porcentaje = (p.precio_unidad - masBarato.precio_unidad) / p.precio_unidad;
   const costoActual = p.precio_unidad * p.unidades;
   const costoBarato = masBarato.precio_unidad * p.unidades;
 
-  const ahorro = crear('div', 'alternativa-ahorro');
-  const texto = crear('p');
+  const ahorro = crear('div', 'ahorro');
+  ahorro.append(
+    crear('span', 'ahorro-porcentaje', `${porcentajeCO.format(porcentaje)} menos`),
+    crear('span', 'ahorro-texto',
+      `Por las mismas ${p.unidades} unidades pagarías ${pesos.format(costoBarato)} en vez de ` +
+      `${pesos.format(costoActual)}: ahorras ${pesos.format(costoActual - costoBarato)}.`)
+  );
+
+  const sugerido = crear('div', 'sugerido');
+  sugerido.append(foto(masBarato.imagen, masBarato.producto));
+  const texto = crear('div');
+  const detalle = crear('p');
+  detalle.append(
+    crear('span', claseFarmacia(masBarato.farmacia), masBarato.farmacia),
+    ` · ${masBarato.marca || 'Sin marca'} · ${masBarato.presentacion || ''}`
+  );
   texto.append(
-    crear('strong', null, `Ahorras ${pesos.format(costoActual - costoBarato)}`),
-    ` por las mismas ${p.unidades} unidades: ${pesos.format(costoBarato)} en vez de ${pesos.format(costoActual)}.`
+    crear('p', 'sugerido-nombre', masBarato.producto),
+    detalle,
+    crear('p', null,
+      `${pesos.format(masBarato.precio_unidad)} por unidad · ${pesos.format(masBarato.precio)}` +
+      `${masBarato.unidades ? ` por ${masBarato.unidades} unidades` : ''} · precio del ${fechaCorta(masBarato.fecha)}`)
   );
-  ahorro.append(crear('span', 'porcentaje', `−${porcentajeCO.format(porcentaje)}`), texto);
+  if (masBarato.url) texto.append(enlaceTienda(masBarato.url, `Ver en ${masBarato.farmacia}`));
+  sugerido.append(texto);
 
-  const porUnidad = crear('p', null,
-    `Por unidad: ${pesos.format(masBarato.precio_unidad)} en vez de ${pesos.format(p.precio_unidad)}.`);
-
-  const producto = crear('div', 'alternativa-producto');
-  producto.append(
-    crear('p', 'alternativa-nombre', masBarato.producto),
-    crear('p', 'alternativa-detalle',
-      `${masBarato.farmacia} · ${masBarato.marca || 'sin marca'} · ${masBarato.presentacion || 'sin presentación'}`),
-    crear('p', 'alternativa-detalle',
-      `${pesos.format(masBarato.precio_unidad)} por unidad · Precio: ${pesos.format(masBarato.precio)}` +
-      (masBarato.unidades ? ` (${masBarato.unidades} unidades)` : '')),
-    crear('p', 'alternativa-detalle', `${masBarato.farmacia} · precio del ${fechaCorta(masBarato.fecha)}`)
-  );
-  if (masBarato.url) producto.append(crearEnlace(masBarato.url, `Ver en ${masBarato.farmacia}`));
-
-  return [ahorro, porUnidad, producto];
+  return [titulo, ahorro, sugerido];
 }
-
-// ---------- Grupos ----------
 
 function crearGrupo(lista, coincidencias) {
   const primero = lista[0];
@@ -413,142 +532,225 @@ function crearGrupo(lista, coincidencias) {
   const minimo = conPrecio.length ? conPrecio[0].precio_unidad : null;
   const maximo = conPrecio.length ? conPrecio[conPrecio.length - 1].precio_unidad : null;
 
-  // Cabeza del grupo
   const cabeza = crear('header', 'grupo-cabeza');
-  const izquierda = crear('div');
-  const titulo = crear('h2', 'grupo-titulo', `${nombreSustancia(primero.principio_activo)} `);
-  titulo.append(crear('span', null, primero.concentracion));
-  izquierda.append(titulo);
-
-  const chips = crear('ul', 'chips');
+  cabeza.append(crear('h2', 'grupo-titulo',
+    `${infoMedicamento(primero.principio_activo).nombre} ${dosis(primero.concentracion)}`));
   const numFarmacias = new Set(lista.map((p) => p.farmacia)).size;
-  chips.append(
-    crear('li', 'chip', lista.length === 1 ? '1 opción' : `${lista.length} opciones`),
-    crear('li', 'chip', numFarmacias === 1 ? '1 farmacia' : `${numFarmacias} farmacias`)
-  );
-  if (minimo != null) chips.append(crear('li', 'chip chip-ahorro', `Desde ${pesos.format(minimo)} por unidad`));
-  izquierda.append(chips);
-  cabeza.append(izquierda);
-
+  const meta = crear('p', 'grupo-meta',
+    `${lista.length} ${lista.length === 1 ? 'precio' : 'precios'} en ${numFarmacias} ${numFarmacias === 1 ? 'farmacia' : 'farmacias'}`);
   if (minimo != null && maximo > minimo) {
-    const ahorro = crear('p', 'grupo-ahorro');
-    ahorro.insertAdjacentHTML('afterbegin', ICONOS.alcancia.replace('<svg', '<svg width="20" height="20"'));
-    ahorro.append('Hasta ', crear('strong', null, porcentajeCO.format((maximo - minimo) / maximo)), ' menos eligiendo la más barata');
-    cabeza.append(ahorro);
+    meta.append(' · ', crear('strong', null, `hasta ${porcentajeCO.format((maximo - minimo) / maximo)} menos`),
+      ' eligiendo el más barato');
   }
+  cabeza.append(meta);
   seccion.append(cabeza);
 
   // "Coincide" solo aporta si el grupo mezcla productos que coinciden y que no (p. ej. al buscar una marca).
   const marcarCoincidencias = lista.some((p) => !coincidencias.has(p));
-  const ul = crear('ul', 'tarjetas');
+  const ul = crear('ul', 'ofertas');
   lista.forEach((p, i) => {
     const coincide = marcarCoincidencias && coincidencias.has(p);
-    ul.append(crearTarjeta(p, { grupo: lista, minimo, maximo, coincide }, i));
+    ul.append(crearOferta(p, { grupo: lista, minimo, coincide }, i));
   });
   seccion.append(ul);
   return seccion;
 }
 
-function mostrarIndice(grupos) {
-  if (grupos.length < 2) {
-    $indice.hidden = true;
-    $indice.replaceChildren();
+function mostrarResultados(consulta) {
+  const { coincidencias, grupos } = buscar(consulta);
+  const volver = crear('button', 'volver', '← Todos los medicamentos');
+  volver.type = 'button';
+  volver.addEventListener('click', () => irA('', true));
+
+  if (grupos.length === 0) {
+    $lateral.replaceChildren(volver);
+    const vacio = crear('div', 'vacio');
+    vacio.append(
+      crear('h1', 'vista-titulo', `No encontramos «${consulta.trim()}»`),
+      crear('p', null,
+        'Revisa cómo está escrito o busca por principio activo. Por ahora comparamos estos 20 medicamentos:')
+    );
+    const ver = crear('button', 'boton boton-solido', 'Ver los medicamentos disponibles');
+    ver.type = 'button';
+    ver.addEventListener('click', () => irA('', true));
+    vacio.append(ver);
+    $vista.replaceChildren(vacio);
     return;
   }
-  const ol = crear('ol');
+
+  // Lateral: índice de grupos
+  const ul = crear('ul');
   for (const lista of grupos) {
     const primero = lista[0];
-    const conPrecio = lista.find((p) => p.precio_unidad != null);
-    const enlace = crear('a', null, `${nombreSustancia(primero.principio_activo)} ${primero.concentracion}`);
+    const enlace = crear('a', 'filtro');
     enlace.href = `#${idGrupo(primero)}`;
+    enlace.addEventListener('click', (evento) => {
+      evento.preventDefault();
+      document.getElementById(idGrupo(primero)).scrollIntoView({ behavior: 'smooth' });
+    });
+    enlace.append(crear('span', null, `${infoMedicamento(primero.principio_activo).nombre} ${dosis(primero.concentracion)}`));
+    const conPrecio = lista.find((p) => p.precio_unidad != null);
     if (conPrecio) enlace.append(crear('small', null, pesos.format(conPrecio.precio_unidad)));
     const li = crear('li');
     li.append(enlace);
-    ol.append(li);
+    ul.append(li);
   }
-  $indice.replaceChildren(crear('p', 'indice-titulo', `${grupos.length} grupos`), ol);
-  $indice.hidden = false;
-}
+  $lateral.setAttribute('aria-label', 'Concentraciones encontradas');
+  $lateral.replaceChildren(volver, crear('p', 'lateral-titulo', 'En esta búsqueda'), ul);
 
-// ---------- Estados ----------
-
-function mostrarInicio() {
-  $estado.textContent = '';
-  mostrarIndice([]);
-
-  const inicio = crear('div', 'inicio');
-  inicio.append(
-    crear('h2', 'inicio-titulo', '¿Qué medicamento buscas?'),
-    crear('p', 'inicio-texto', 'Escribe el nombre, la marca o el principio activo. Prueba con:')
-  );
-  const ejemplos = crear('div', 'ejemplos');
-  for (const ejemplo of EJEMPLOS) {
-    const boton = crear('button', 'ejemplo', ejemplo);
-    boton.type = 'button';
-    boton.addEventListener('click', () => {
-      $busqueda.value = ejemplo;
-      actualizar();
-      $busqueda.focus();
-    });
-    ejemplos.append(boton);
-  }
-  inicio.append(ejemplos);
-
-  const pasos = crear('ol', 'pasos');
-  const contenidoPasos = [
-    ['buscar', 'Busca', 'Por nombre comercial, marca o principio activo, con o sin tildes.'],
-    ['balanza', 'Compara por unidad', 'Agrupamos por sustancia y concentración y ordenamos por precio por tableta o cápsula, no por caja.'],
-    ['alcancia', 'Ahorra', 'Toca una tarjeta para ver la opción más barata con la misma sustancia y cuánto ahorras.'],
-  ];
-  contenidoPasos.forEach(([nombreIcono, titulo, texto], i) => {
-    const li = crear('li', 'paso');
-    li.style.setProperty('--i', i);
-    const iconoPaso = crear('span', 'paso-icono');
-    iconoPaso.setAttribute('aria-hidden', 'true');
-    iconoPaso.innerHTML = ICONOS[nombreIcono];
-    const textoPaso = crear('div');
-    textoPaso.append(crear('h3', null, titulo), crear('p', null, texto));
-    li.append(iconoPaso, textoPaso);
-    pasos.append(li);
-  });
-  inicio.append(pasos);
-  $resultados.replaceChildren(inicio);
-}
-
-function mostrarVacio(titulo, texto) {
-  const vacio = crear('div', 'vacio');
-  vacio.insertAdjacentHTML('afterbegin', ILUSTRACION_VACIO);
-  vacio.append(crear('h2', null, titulo), crear('p', null, texto));
-  $resultados.replaceChildren(vacio);
-}
-
-function actualizar() {
-  const consulta = $busqueda.value;
-  if (normalizar(consulta).length < MIN_LETRAS) {
-    mostrarInicio();
-    return;
-  }
-
-  const { coincidencias, grupos } = buscar(consulta);
-  if (grupos.length === 0) {
-    $estado.textContent = '';
-    mostrarIndice([]);
-    mostrarVacio(
-      `No encontramos «${consulta.trim()}»`,
-      'Revisa cómo está escrito o prueba con el principio activo, por ejemplo acetaminofén.'
-    );
-    return;
-  }
-
+  // Título: el nombre del medicamento si todos los grupos son de la misma sustancia.
+  const principios = new Set(grupos.map((g) => g[0].principio_activo));
   const total = grupos.reduce((suma, g) => suma + g.length, 0);
-  const textoGrupos = grupos.length === 1 ? '1 grupo' : `${grupos.length} grupos`;
-  const textoOpciones = total === 1 ? '1 opción' : `${total} opciones`;
-  $estado.textContent = `${textoOpciones} en ${textoGrupos} de sustancia y concentración`;
-  mostrarIndice(grupos);
-  $resultados.replaceChildren(...grupos.map((g) => crearGrupo(g, coincidencias)));
+  const cabeza = crear('div', 'vista-cabeza');
+  const migas = crear('p', 'migas');
+  const inicio = crear('a', null, 'Medicamentos');
+  inicio.href = '#';
+  inicio.addEventListener('click', (evento) => {
+    evento.preventDefault();
+    irA('', true);
+  });
+  const unico = principios.size === 1 ? infoMedicamento([...principios][0]) : null;
+  migas.append(inicio, unico ? ` › ${unico.categoria}` : ' › Búsqueda');
+  cabeza.append(
+    migas,
+    crear('h1', 'vista-titulo', unico ? unico.nombre : `Resultados para «${consulta.trim()}»`),
+    crear('p', 'vista-sub',
+      `${total} precios en ${grupos.length} ${grupos.length === 1 ? 'concentración' : 'concentraciones'}, ` +
+      'ordenados por precio por unidad. Toca una fila para ver la opción más barata con la misma sustancia.')
+  );
+  $vista.replaceChildren(cabeza, ...grupos.map((g) => crearGrupo(g, coincidencias)));
 }
 
-// ---------- Inicio ----------
+// ---------- Lista desplegable del buscador ----------
+
+const $cajaSugerencias = document.getElementById('sugerencias-caja');
+const $sugerencias = document.getElementById('sugerencias');
+const MAX_PRODUCTOS_SUGERIDOS = 8;
+let opciones = []; // [{ el, elegir }]
+let opcionActiva = -1;
+
+function crearOpcion(id, imagen, titulo, detalle, precio, elegir) {
+  const li = crear('li', 'opcion');
+  li.id = id;
+  li.setAttribute('role', 'option');
+  li.setAttribute('aria-selected', 'false');
+  li.append(foto(imagen, ''));
+  const textos = crear('span', 'opcion-textos');
+  textos.append(crear('span', 'opcion-titulo', titulo), crear('span', 'opcion-detalle', detalle));
+  li.append(textos);
+  if (precio) li.append(crear('span', 'opcion-precio', precio));
+  // mousedown para que el clic llegue antes de que el buscador pierda el foco
+  li.addEventListener('mousedown', (evento) => {
+    evento.preventDefault();
+    elegir();
+  });
+  opciones.push({ el: li, elegir });
+  return li;
+}
+
+function mostrarSugerencias() {
+  const texto = normalizar($busqueda.value);
+  opciones = [];
+  opcionActiva = -1;
+  $busqueda.removeAttribute('aria-activedescendant');
+
+  const medicamentos = resumenCatalogo().filter(
+    (m) => !texto || normalizar(`${m.nombre} ${m.principio} ${m.alias || ''} ${m.categoria}`).includes(texto)
+  );
+  const elementos = [];
+
+  if (medicamentos.length) {
+    elementos.push(crear('li', 'opcion-grupo',
+      texto ? 'Medicamentos' : `Todos los medicamentos disponibles (${medicamentos.length})`));
+    medicamentos.forEach((m, i) => {
+      elementos.push(crearOpcion(
+        `opcion-m-${i}`, m.imagen, m.nombre,
+        `${m.categoria} · ${m.concentraciones.map(dosis).join(', ')}`,
+        m.masBarato ? `desde ${pesos.format(m.masBarato.precio_unidad)} c/u` : '',
+        () => elegirSugerencia(m.nombre)
+      ));
+    });
+  }
+
+  // Con texto, también productos concretos (marcas como Dolex o Cozaar).
+  if (texto.length >= MIN_LETRAS) {
+    const palabras = texto.split(/\s+/);
+    const vistos = new Set();
+    const encontrados = [];
+    for (const p of [...productos].sort(porPrecioUnidad)) {
+      const clave = normalizar(p.producto);
+      if (vistos.has(clave) || !palabras.every((w) => p.texto_busqueda.includes(w))) continue;
+      vistos.add(clave);
+      encontrados.push(p);
+    }
+    if (encontrados.length) {
+      elementos.push(crear('li', 'opcion-grupo', `Productos (${encontrados.length})`));
+      encontrados.slice(0, MAX_PRODUCTOS_SUGERIDOS).forEach((p, i) => {
+        elementos.push(crearOpcion(
+          `opcion-p-${i}`, p.imagen, p.producto,
+          `${p.farmacia} · ${infoMedicamento(p.principio_activo).nombre} ${dosis(p.concentracion)}`,
+          p.precio_unidad != null ? `${pesos.format(p.precio_unidad)} c/u` : '',
+          () => elegirSugerencia(p.producto)
+        ));
+      });
+    }
+  }
+
+  if (!elementos.length) {
+    elementos.push(crear('li', 'opcion-vacia', 'No hay medicamentos con ese nombre. Prueba con el principio activo.'));
+  }
+  elementos.forEach((el) => {
+    if (!el.getAttribute('role')) el.setAttribute('role', 'presentation');
+  });
+  $sugerencias.replaceChildren(...elementos);
+  $cajaSugerencias.hidden = false;
+  $busqueda.setAttribute('aria-expanded', 'true');
+}
+
+function cerrarSugerencias() {
+  $cajaSugerencias.hidden = true;
+  $busqueda.setAttribute('aria-expanded', 'false');
+  $busqueda.removeAttribute('aria-activedescendant');
+  opcionActiva = -1;
+}
+
+function marcarOpcion(indice) {
+  if (!opciones.length) return;
+  opcionActiva = (indice + opciones.length) % opciones.length;
+  opciones.forEach(({ el }, i) => el.setAttribute('aria-selected', String(i === opcionActiva)));
+  const { el } = opciones[opcionActiva];
+  $busqueda.setAttribute('aria-activedescendant', el.id);
+  el.scrollIntoView({ block: 'nearest' });
+}
+
+function elegirSugerencia(consulta) {
+  cerrarSugerencias();
+  irA(consulta, true);
+  $busqueda.blur();
+}
+
+// ---------- Navegación ----------
+
+function consultaDeLaUrl() {
+  const parametros = new URLSearchParams(location.hash.slice(1));
+  return parametros.get('q') || '';
+}
+
+function mostrar() {
+  const consulta = $busqueda.value;
+  if (normalizar(consulta).length < MIN_LETRAS) mostrarCatalogo();
+  else mostrarResultados(consulta);
+}
+
+// Cambia la vista y la URL (#q=...) para que funcionen el botón "atrás" y compartir el enlace.
+function irA(consulta, nuevaEntrada) {
+  $busqueda.value = consulta;
+  const hash = consulta ? `#q=${encodeURIComponent(consulta)}` : location.pathname + location.search;
+  if (nuevaEntrada) history.pushState(null, '', hash);
+  else history.replaceState(null, '', hash);
+  mostrar();
+  if (nuevaEntrada) window.scrollTo({ top: 0 });
+}
 
 async function iniciar() {
   try {
@@ -557,25 +759,54 @@ async function iniciar() {
     productos = convertirFilas(leerCSV(await respuesta.text()));
   } catch (error) {
     console.error('No se pudo cargar', RUTA_DATOS, error);
-    $fechaTexto.textContent = 'Sin conexión con los datos';
-    mostrarVacio('No pudimos cargar los precios', 'Revisa tu conexión e inténtalo de nuevo.');
+    $franja.textContent = 'No pudimos cargar los precios. Revisa tu conexión e inténtalo de nuevo.';
+    $vista.replaceChildren();
     return;
   }
 
   farmacias = [...new Set(productos.map((p) => p.farmacia))].sort((a, b) => a.localeCompare(b, 'es'));
   mostrarDatosGenerales();
   $busqueda.disabled = false;
-  $busqueda.addEventListener('input', actualizar);
-  actualizar();
+  $busqueda.value = consultaDeLaUrl();
+  $busqueda.addEventListener('input', () => {
+    irA($busqueda.value, false);
+    mostrarSugerencias();
+  });
+  $busqueda.addEventListener('focus', mostrarSugerencias);
+  $busqueda.addEventListener('click', () => {
+    if ($cajaSugerencias.hidden) mostrarSugerencias();
+  });
+  $busqueda.addEventListener('blur', cerrarSugerencias);
+  $busqueda.addEventListener('keydown', (evento) => {
+    const abierta = !$cajaSugerencias.hidden;
+    if (evento.key === 'ArrowDown') {
+      evento.preventDefault();
+      if (!abierta) mostrarSugerencias();
+      marcarOpcion(opcionActiva + 1);
+    } else if (evento.key === 'ArrowUp' && abierta) {
+      evento.preventDefault();
+      marcarOpcion(opcionActiva - 1);
+    } else if (evento.key === 'Enter') {
+      evento.preventDefault();
+      if (abierta && opcionActiva >= 0) opciones[opcionActiva].elegir();
+      else cerrarSugerencias();
+    } else if (evento.key === 'Escape' && abierta) {
+      evento.preventDefault();
+      evento.stopPropagation();
+      cerrarSugerencias();
+    }
+  });
+  window.addEventListener('popstate', () => {
+    $busqueda.value = consultaDeLaUrl();
+    mostrar();
+  });
+  document.getElementById('logo').addEventListener('click', (evento) => {
+    evento.preventDefault();
+    categoriaActiva = TODAS;
+    irA('', true);
+  });
+  mostrar();
 }
-
-// Fondo para la barra de búsqueda cuando queda pegada arriba al hacer scroll.
-const $barra = document.querySelector('.barra-busqueda');
-window.addEventListener(
-  'scroll',
-  () => $barra.classList.toggle('pegada', $barra.getBoundingClientRect().top <= 0 && window.scrollY > 0),
-  { passive: true }
-);
 
 // Atajos de teclado en computador: "/" enfoca el buscador, Escape lo limpia.
 document.addEventListener('keydown', (evento) => {
@@ -584,8 +815,7 @@ document.addEventListener('keydown', (evento) => {
     $busqueda.focus();
     $busqueda.select();
   } else if (evento.key === 'Escape' && document.activeElement === $busqueda && $busqueda.value) {
-    $busqueda.value = '';
-    actualizar();
+    irA('', false);
   }
 });
 

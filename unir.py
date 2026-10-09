@@ -23,16 +23,17 @@ HOY = DATOS / "scrapeado-hoy.csv"
 ESTADO = DATOS / "estado-scraping.json"
 COLUMNAS = [
     "fecha", "farmacia", "principio_activo", "concentracion", "producto", "marca",
-    "presentacion", "unidades", "precio", "precio_lista", "precio_unidad", "url",
+    "presentacion", "unidades", "precio", "precio_lista", "precio_unidad", "url", "imagen",
 ]
 
 
 def leer(ruta):
     with ruta.open(encoding="utf-8", newline="") as archivo:
         lector = csv.DictReader(archivo)
-        if lector.fieldnames != COLUMNAS:
+        # Los archivos anteriores a la columna "imagen" se aceptan y quedan sin imagen.
+        if lector.fieldnames not in (COLUMNAS, COLUMNAS[:-1]):
             sys.exit(f"{ruta.name} no tiene las columnas esperadas: {lector.fieldnames}")
-        return list(lector)
+        return [{**fila, "imagen": fila.get("imagen") or ""} for fila in lector]
 
 
 def clave(fila):
