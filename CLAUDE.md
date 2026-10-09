@@ -21,17 +21,19 @@ Web que compara precios de medicamentos entre farmacias de Colombia y muestra la
 - Estilo de tienda real, no genérico: fondo blanco, color de marca plano (#0b5d8c), amarillo solo para "Precio más bajo", fotos reales de producto, tipografía Figtree. Sin degradados llamativos, ilustraciones flotantes ni texto con degradado.
 
 ### Datos
-- Los datos viven en `data/precios.csv` y se leen en el navegador (con `fetch`).
+- Los datos viven en `data/precios.csv` y se leen en el navegador (con `fetch`). `precios.csv` tiene **solo los precios de la consulta de hoy**.
+- `data/historial.csv` acumula **una fila por producto, farmacia y fecha** (producto = `url` + `presentacion`; mismas columnas que `precios.csv` sin `imagen`). Si el proceso corre dos veces el mismo día, las filas de ese día se reemplazan, no se duplican.
+- `unir.py` borra del historial las filas con **más de 90 días** (fecha anterior a hoy − 90 días, hora Colombia).
 - Nunca inventes precios ni edites precios a mano en el CSV o en el código. Si faltan datos, dilo; no los rellenes.
 - Cada precio que se muestre debe indicar la farmacia y la fecha del precio.
 - La columna `imagen` guarda la URL de la foto del producto en el CDN de la farmacia (VTEX, `/arquivos/`, a 300x300). Las fotos no se copian al repositorio; si una no carga, se muestra un ícono.
 
 ### Actualización automática
-- GitHub Actions (`.github/workflows/actualizar-precios.yml`) corre todos los días a las 7:00 a. m. hora Colombia: `scraper.py` consulta La Rebaja, Locatel y Olímpica, y `unir.py` actualiza `data/precios.csv`. El commit del bot republica el sitio.
-- `data/precios.csv`, `data/scrapeado-hoy.csv` y `data/estado-scraping.json` los genera ese proceso: no se editan a mano. Para corregir datos se cambia el código del scraper.
+- GitHub Actions (`.github/workflows/actualizar-precios.yml`) corre todos los días a las 7:00 a. m. hora Colombia: `scraper.py` consulta La Rebaja, Locatel y Olímpica, y `unir.py` reescribe `data/precios.csv` con lo de hoy y actualiza `data/historial.csv`. El commit del bot republica el sitio.
+- `data/precios.csv`, `data/historial.csv`, `data/scrapeado-hoy.csv` y `data/estado-scraping.json` los genera ese proceso: no se editan a mano. Para corregir datos se cambia el código del scraper.
 - La lista de los 20 medicamentos está en `SUSTANCIAS` y `TERMINOS` de `scraper.py`.
 - Respetar el `robots.txt` de cada farmacia (con comodines), identificarse con el User-Agent de MediFácil y esperar 1,5 s entre consultas.
-- Si una farmacia falla, se conservan sus precios anteriores con su fecha; nunca se rellenan.
+- Si una farmacia falla, no aparece en `precios.csv` ese día (sus precios anteriores siguen en el historial); nunca se rellenan. Si no llega ningún precio, `scraper.py` termina con error y no se publica nada: queda el último `precios.csv` bueno.
 - Se descarta, no se corrige: combinaciones, formas líquidas o no orales, productos sin concentración o sin unidades, no disponibles, y productos cuyo nombre menciona una sustancia distinta a la de la ficha de la tienda.
 
 ### Comparación

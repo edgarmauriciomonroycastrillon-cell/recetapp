@@ -27,7 +27,8 @@ Compara el precio de tus medicamentos en farmacias de Colombia y encuentra la op
 ```
 GitHub Actions (todos los días, 7:00 a. m.)
   └─ scraper.py  → consulta las 3 farmacias  → data/scrapeado-hoy.csv + data/estado-scraping.json
-  └─ unir.py     → actualiza los precios     → data/precios.csv
+  └─ unir.py     → precios de hoy             → data/precios.csv
+                 → acumula y borra > 90 días  → data/historial.csv
   └─ commit del bot → GitHub Pages republica el sitio
 
 Navegador
@@ -45,10 +46,11 @@ Consulta la API pública de catálogo de cada farmacia (`/api/catalog_system/pub
 
 ### `unir.py`
 
-Actualiza `data/precios.csv` a partir de lo consultado hoy:
+A partir de lo consultado hoy (`data/scrapeado-hoy.csv`):
 
-- Si una farmacia respondió completa, sus precios se reemplazan por los de hoy.
-- Si una farmacia falló, se **conservan sus precios anteriores con su fecha**. Nunca se inventan ni se rellenan precios.
+- Reescribe `data/precios.csv` con **solo los precios de hoy**. Si una farmacia falló, ese día no aparece en el sitio; sus precios anteriores quedan en el historial. Nunca se inventan ni se rellenan precios.
+- Agrega los precios de hoy a `data/historial.csv` y **borra los registros con más de 90 días**.
+- Si no llegó ningún precio, no cambia nada: `scraper.py` termina con error, el bot no publica y el sitio sigue con el último `precios.csv` bueno.
 
 ### Datos: `data/precios.csv`
 
@@ -68,6 +70,14 @@ Actualiza `data/precios.csv` a partir de lo consultado hoy:
 | `url` | enlace al producto en la tienda |
 | `imagen` | foto del producto en el servidor de la farmacia |
 
+### Historial: `data/historial.csv`
+
+- Una fila por **producto, farmacia y fecha**. El producto se identifica por su `url` y su `presentacion` (Locatel usa la misma url para el blíster y la caja).
+- Mismas columnas que `precios.csv`, sin `imagen`.
+- Si la actualización corre dos veces el mismo día, las filas de ese día se reemplazan; no se duplican.
+- Se guardan **90 días**: cada día `unir.py` borra las filas con fecha anterior a hoy − 90 días (hora Colombia). Son unas 530 filas por día, unos 9,5 MB al llenarse.
+- Por ahora el sitio no lo muestra; queda listo para ver cómo cambian los precios.
+
 Los archivos de `data/` los genera el proceso automático: **no se editan a mano**. Si hay un error en los datos, se corrige en `scraper.py`.
 
 ## Estructura
@@ -76,10 +86,11 @@ Los archivos de `data/` los genera el proceso automático: **no se editan a mano
 |---|---|
 | `index.html`, `estilos.css`, `app.js` | El sitio (HTML, CSS y JavaScript sin frameworks ni paso de build) |
 | `scraper.py` | Consulta las farmacias |
-| `unir.py` | Une lo de hoy con los precios anteriores |
+| `unir.py` | Escribe los precios de hoy y actualiza el historial (90 días) |
 | `.github/workflows/actualizar-precios.yml` | Programa la actualización diaria |
-| `data/precios.csv` | Los precios que lee el sitio |
-| `data/base.csv` | Datos iniciales, solo de respaldo si falta `precios.csv` |
+| `data/precios.csv` | Los precios de hoy, los que lee el sitio |
+| `data/historial.csv` | Precios de los últimos 90 días, una fila por producto, farmacia y fecha |
+| `data/base.csv` | Datos iniciales del 8 de octubre de 2026 (ya no los usa el proceso) |
 | `CLAUDE.md` | Reglas del proyecto |
 
 ## Correrlo en tu computador
