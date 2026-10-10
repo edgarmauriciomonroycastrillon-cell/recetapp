@@ -1,18 +1,18 @@
 {
-  "fecha": "2026-10-09",
+  "fecha": "2026-10-10",
   "farmacias": {
     "La Rebaja": {
       "consultas_ok": 22,
       "consultas_error": 0,
-      "productos": 662,
-      "filas": 223,
+      "productos": 660,
+      "filas": 218,
       "errores": [],
       "descartes": {
-        "combinación": 210,
-        "no disponible": 91,
+        "combinación": 212,
+        "no disponible": 93,
         "forma líquida": 61,
         "sobre": 6,
-        "sin concentración": 40,
+        "sin concentración": 39,
         "producto para gripa": 7,
         "principio activo no coincide con el nombre": 1,
         "fuera de la lista": 11,
@@ -22,37 +22,39 @@
       }
     },
     "Locatel": {
-      "consultas_ok": 22,
-      "consultas_error": 0,
-      "productos": 525,
-      "filas": 196,
-      "errores": [],
+      "consultas_ok": 21,
+      "consultas_error": 1,
+      "productos": 501,
+      "filas": 185,
+      "errores": [
+        "ibuprofeno: HTTP Error 500: Internal Server Error"
+      ],
       "descartes": {
-        "combinación": 156,
+        "combinación": 145,
         "no disponible": 31,
         "fuera de la lista": 55,
-        "sin principio activo en el nombre": 52,
-        "forma líquida": 25,
+        "sin principio activo en el nombre": 50,
+        "forma líquida": 22,
         "producto para gripa": 3,
         "sin concentración": 5,
-        "oferta de paquete": 2,
         "sin unidades": 4,
         "forma no oral sólida": 11,
-        "sobre": 2
+        "sobre": 2,
+        "oferta de paquete": 1
       }
     },
     "Olímpica": {
       "consultas_ok": 22,
       "consultas_error": 0,
       "productos": 204,
-      "filas": 127,
+      "filas": 128,
       "errores": [],
       "descartes": {
         "combinación": 26,
         "sin concentración": 3,
         "sin unidades": 2,
         "sin principio activo en el nombre": 29,
-        "forma líquida": 13,
+        "forma líquida": 12,
         "forma no oral sólida": 2,
         "oferta de paquete": 2
       }
