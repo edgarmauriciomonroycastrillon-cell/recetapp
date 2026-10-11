@@ -1,15 +1,15 @@
 {
-  "fecha": "2026-10-10",
+  "fecha": "2026-10-11",
   "farmacias": {
     "La Rebaja": {
       "consultas_ok": 22,
       "consultas_error": 0,
-      "productos": 660,
-      "filas": 218,
+      "productos": 662,
+      "filas": 212,
       "errores": [],
       "descartes": {
         "combinación": 212,
-        "no disponible": 93,
+        "no disponible": 101,
         "forma líquida": 61,
         "sobre": 6,
         "sin concentración": 39,
@@ -22,25 +22,23 @@
       }
     },
     "Locatel": {
-      "consultas_ok": 21,
-      "consultas_error": 1,
-      "productos": 501,
-      "filas": 185,
-      "errores": [
-        "ibuprofeno: HTTP Error 500: Internal Server Error"
-      ],
+      "consultas_ok": 22,
+      "consultas_error": 0,
+      "productos": 525,
+      "filas": 196,
+      "errores": [],
       "descartes": {
-        "combinación": 145,
+        "combinación": 156,
         "no disponible": 31,
         "fuera de la lista": 55,
-        "sin principio activo en el nombre": 50,
-        "forma líquida": 22,
+        "sin principio activo en el nombre": 52,
+        "forma líquida": 25,
         "producto para gripa": 3,
         "sin concentración": 5,
+        "oferta de paquete": 2,
         "sin unidades": 4,
         "forma no oral sólida": 11,
-        "sobre": 2,
-        "oferta de paquete": 1
+        "sobre": 2
       }
     },
     "Olímpica": {
