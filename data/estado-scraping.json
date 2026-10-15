@@ -1,22 +1,22 @@
 {
-  "fecha": "2026-10-14",
+  "fecha": "2026-10-15",
   "farmacias": {
     "La Rebaja": {
       "consultas_ok": 22,
       "consultas_error": 0,
-      "productos": 646,
-      "filas": 214,
+      "productos": 659,
+      "filas": 225,
       "errores": [],
       "descartes": {
-        "combinación": 213,
-        "no disponible": 86,
-        "forma líquida": 60,
+        "combinación": 212,
+        "no disponible": 87,
+        "forma líquida": 61,
         "sobre": 6,
         "sin concentración": 37,
         "producto para gripa": 7,
         "principio activo no coincide con el nombre": 1,
         "fuera de la lista": 11,
-        "forma no oral sólida": 10,
+        "forma no oral sólida": 11,
         "oferta de paquete": 3,
         "sin principio activo en el nombre": 1
       }
@@ -42,17 +42,19 @@
       }
     },
     "Olímpica": {
-      "consultas_ok": 22,
-      "consultas_error": 0,
-      "productos": 204,
-      "filas": 129,
-      "errores": [],
+      "consultas_ok": 21,
+      "consultas_error": 1,
+      "productos": 194,
+      "filas": 121,
+      "errores": [
+        "azitromicina: HTTP Error 500: Internal Server Error"
+      ],
       "descartes": {
         "combinación": 25,
         "sin concentración": 3,
         "sin unidades": 2,
-        "sin principio activo en el nombre": 29,
-        "forma líquida": 12,
+        "sin principio activo en el nombre": 28,
+        "forma líquida": 11,
         "forma no oral sólida": 2,
         "oferta de paquete": 2
       }
