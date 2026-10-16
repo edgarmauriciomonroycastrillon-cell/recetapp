@@ -1,15 +1,15 @@
 {
-  "fecha": "2026-10-15",
+  "fecha": "2026-10-16",
   "farmacias": {
     "La Rebaja": {
       "consultas_ok": 22,
       "consultas_error": 0,
       "productos": 659,
-      "filas": 225,
+      "filas": 220,
       "errores": [],
       "descartes": {
         "combinación": 212,
-        "no disponible": 87,
+        "no disponible": 92,
         "forma líquida": 61,
         "sobre": 6,
         "sin concentración": 37,
@@ -42,19 +42,17 @@
       }
     },
     "Olímpica": {
-      "consultas_ok": 21,
-      "consultas_error": 1,
-      "productos": 194,
-      "filas": 121,
-      "errores": [
-        "azitromicina: HTTP Error 500: Internal Server Error"
-      ],
+      "consultas_ok": 22,
+      "consultas_error": 0,
+      "productos": 204,
+      "filas": 127,
+      "errores": [],
       "descartes": {
-        "combinación": 25,
+        "combinación": 26,
         "sin concentración": 3,
         "sin unidades": 2,
-        "sin principio activo en el nombre": 28,
-        "forma líquida": 11,
+        "sin principio activo en el nombre": 29,
+        "forma líquida": 13,
         "forma no oral sólida": 2,
         "oferta de paquete": 2
       }
