@@ -1,18 +1,20 @@
 {
-  "fecha": "2026-10-18",
+  "fecha": "2026-10-19",
   "farmacias": {
     "La Rebaja": {
-      "consultas_ok": 22,
-      "consultas_error": 0,
-      "productos": 659,
-      "filas": 209,
-      "errores": [],
+      "consultas_ok": 21,
+      "consultas_error": 1,
+      "productos": 613,
+      "filas": 201,
+      "errores": [
+        "naproxeno: HTTP Error 500: Internal Server Error"
+      ],
       "descartes": {
-        "combinación": 214,
-        "no disponible": 102,
-        "forma líquida": 61,
+        "combinación": 199,
+        "no disponible": 93,
+        "forma líquida": 56,
         "sobre": 6,
-        "sin concentración": 37,
+        "sin concentración": 28,
         "principio activo no coincide con el nombre": 1,
         "producto para gripa": 6,
         "fuera de la lista": 11,
@@ -22,21 +24,19 @@
       }
     },
     "Locatel": {
-      "consultas_ok": 21,
-      "consultas_error": 1,
-      "productos": 496,
-      "filas": 187,
-      "errores": [
-        "naproxeno: HTTP Error 500: Internal Server Error"
-      ],
+      "consultas_ok": 22,
+      "consultas_error": 0,
+      "productos": 520,
+      "filas": 198,
+      "errores": [],
       "descartes": {
-        "combinación": 152,
-        "no disponible": 27,
-        "fuera de la lista": 53,
-        "sin principio activo en el nombre": 44,
+        "combinación": 156,
+        "no disponible": 28,
+        "fuera de la lista": 55,
+        "sin principio activo en el nombre": 49,
         "forma líquida": 25,
         "producto para gripa": 3,
-        "sin concentración": 3,
+        "sin concentración": 5,
         "oferta de paquete": 2,
         "sin unidades": 4,
         "forma no oral sólida": 10,
@@ -47,14 +47,14 @@
       "consultas_ok": 22,
       "consultas_error": 0,
       "productos": 204,
-      "filas": 128,
+      "filas": 125,
       "errores": [],
       "descartes": {
-        "combinación": 26,
+        "combinación": 28,
         "sin concentración": 3,
         "sin unidades": 2,
         "sin principio activo en el nombre": 29,
-        "forma líquida": 12,
+        "forma líquida": 13,
         "forma no oral sólida": 2,
         "oferta de paquete": 2
       }
