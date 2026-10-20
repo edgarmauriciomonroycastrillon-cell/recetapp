@@ -1,20 +1,18 @@
 {
-  "fecha": "2026-10-19",
+  "fecha": "2026-10-20",
   "farmacias": {
     "La Rebaja": {
-      "consultas_ok": 21,
-      "consultas_error": 1,
-      "productos": 613,
-      "filas": 201,
-      "errores": [
-        "naproxeno: HTTP Error 500: Internal Server Error"
-      ],
+      "consultas_ok": 22,
+      "consultas_error": 0,
+      "productos": 660,
+      "filas": 214,
+      "errores": [],
       "descartes": {
-        "combinación": 199,
-        "no disponible": 93,
-        "forma líquida": 56,
+        "combinación": 214,
+        "no disponible": 97,
+        "forma líquida": 61,
         "sobre": 6,
-        "sin concentración": 28,
+        "sin concentración": 38,
         "principio activo no coincide con el nombre": 1,
         "producto para gripa": 6,
         "fuera de la lista": 11,
@@ -26,12 +24,12 @@
     "Locatel": {
       "consultas_ok": 22,
       "consultas_error": 0,
-      "productos": 520,
-      "filas": 198,
+      "productos": 519,
+      "filas": 205,
       "errores": [],
       "descartes": {
-        "combinación": 156,
-        "no disponible": 28,
+        "combinación": 154,
+        "no disponible": 23,
         "fuera de la lista": 55,
         "sin principio activo en el nombre": 49,
         "forma líquida": 25,
@@ -47,10 +45,10 @@
       "consultas_ok": 22,
       "consultas_error": 0,
       "productos": 204,
-      "filas": 125,
+      "filas": 127,
       "errores": [],
       "descartes": {
-        "combinación": 28,
+        "combinación": 26,
         "sin concentración": 3,
         "sin unidades": 2,
         "sin principio activo en el nombre": 29,
