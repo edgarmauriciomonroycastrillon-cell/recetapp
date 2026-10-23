@@ -1,25 +1,23 @@
 {
-  "fecha": "2026-10-22",
+  "fecha": "2026-10-23",
   "farmacias": {
     "La Rebaja": {
-      "consultas_ok": 21,
-      "consultas_error": 1,
-      "productos": 611,
-      "filas": 185,
-      "errores": [
-        "omeprazol: HTTP Error 503: Service Unavailable"
-      ],
+      "consultas_ok": 22,
+      "consultas_error": 0,
+      "productos": 658,
+      "filas": 216,
+      "errores": [],
       "descartes": {
-        "combinación": 207,
-        "no disponible": 94,
-        "forma líquida": 56,
+        "combinación": 212,
+        "no disponible": 95,
+        "forma líquida": 62,
         "sobre": 6,
-        "sin concentración": 39,
+        "sin concentración": 37,
         "principio activo no coincide con el nombre": 1,
-        "oferta de paquete": 4,
-        "fuera de la lista": 10,
-        "forma no oral sólida": 10,
-        "producto para gripa": 1,
+        "producto para gripa": 6,
+        "fuera de la lista": 11,
+        "forma no oral sólida": 11,
+        "oferta de paquete": 3,
         "sin principio activo en el nombre": 1
       }
     },
@@ -27,11 +25,11 @@
       "consultas_ok": 22,
       "consultas_error": 0,
       "productos": 519,
-      "filas": 205,
+      "filas": 206,
       "errores": [],
       "descartes": {
         "combinación": 155,
-        "no disponible": 23,
+        "no disponible": 22,
         "fuera de la lista": 55,
         "sin principio activo en el nombre": 49,
         "forma líquida": 24,
