@@ -1,50 +1,46 @@
 {
-  "fecha": "2026-10-24",
+  "fecha": "2026-10-25",
   "farmacias": {
     "La Rebaja": {
-      "consultas_ok": 21,
-      "consultas_error": 1,
-      "productos": 611,
-      "filas": 201,
-      "errores": [
-        "ibuprofeno: HTTP Error 500: Internal Server Error"
-      ],
+      "consultas_ok": 22,
+      "consultas_error": 0,
+      "productos": 655,
+      "filas": 206,
+      "errores": [],
       "descartes": {
-        "combinación": 200,
-        "no disponible": 87,
-        "forma líquida": 57,
+        "combinación": 210,
+        "no disponible": 104,
+        "forma líquida": 62,
         "sobre": 6,
-        "sin concentración": 32,
+        "sin concentración": 37,
         "principio activo no coincide con el nombre": 1,
+        "producto para gripa": 6,
+        "oferta de paquete": 3,
         "fuera de la lista": 11,
         "forma no oral sólida": 11,
-        "oferta de paquete": 3,
-        "producto para gripa": 4,
         "sin principio activo en el nombre": 1
       }
     },
     "Locatel": {
-      "consultas_ok": 19,
-      "consultas_error": 3,
-      "productos": 475,
-      "filas": 193,
+      "consultas_ok": 21,
+      "consultas_error": 1,
+      "productos": 495,
+      "filas": 194,
       "errores": [
-        "acetaminofen: HTTP Error 500: Internal Server Error",
-        "esomeprazol: HTTP Error 500: Internal Server Error",
-        "acetilsalicilico: HTTP Error 503: Service Unavailable"
+        "naproxeno: HTTP Error 500: Internal Server Error"
       ],
       "descartes": {
-        "combinación": 142,
-        "forma líquida": 21,
+        "combinación": 151,
+        "fuera de la lista": 53,
+        "sin principio activo en el nombre": 44,
+        "forma líquida": 24,
+        "producto para gripa": 3,
+        "sin concentración": 3,
+        "no disponible": 22,
         "oferta de paquete": 2,
-        "producto para gripa": 2,
-        "fuera de la lista": 43,
-        "sin principio activo en el nombre": 46,
-        "no disponible": 20,
         "sin unidades": 4,
         "forma no oral sólida": 10,
-        "sin concentración": 5,
-        "sobre": 1
+        "sobre": 2
       }
     },
     "Olímpica": {
