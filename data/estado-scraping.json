@@ -1,42 +1,42 @@
 {
-  "fecha": "2026-10-25",
+  "fecha": "2026-10-26",
   "farmacias": {
     "La Rebaja": {
-      "consultas_ok": 22,
-      "consultas_error": 0,
-      "productos": 655,
-      "filas": 206,
-      "errores": [],
-      "descartes": {
-        "combinación": 210,
-        "no disponible": 104,
-        "forma líquida": 62,
-        "sobre": 6,
-        "sin concentración": 37,
-        "principio activo no coincide con el nombre": 1,
-        "producto para gripa": 6,
-        "oferta de paquete": 3,
-        "fuera de la lista": 11,
-        "forma no oral sólida": 11,
-        "sin principio activo en el nombre": 1
-      }
-    },
-    "Locatel": {
       "consultas_ok": 21,
       "consultas_error": 1,
-      "productos": 495,
-      "filas": 194,
+      "productos": 610,
+      "filas": 209,
       "errores": [
         "naproxeno: HTTP Error 500: Internal Server Error"
       ],
       "descartes": {
-        "combinación": 151,
-        "fuera de la lista": 53,
-        "sin principio activo en el nombre": 44,
+        "combinación": 197,
+        "no disponible": 84,
+        "forma líquida": 56,
+        "sobre": 6,
+        "sin concentración": 28,
+        "principio activo no coincide con el nombre": 1,
+        "producto para gripa": 6,
+        "fuera de la lista": 11,
+        "forma no oral sólida": 11,
+        "oferta de paquete": 3,
+        "sin principio activo en el nombre": 1
+      }
+    },
+    "Locatel": {
+      "consultas_ok": 22,
+      "consultas_error": 0,
+      "productos": 519,
+      "filas": 205,
+      "errores": [],
+      "descartes": {
+        "combinación": 155,
+        "fuera de la lista": 55,
+        "sin principio activo en el nombre": 49,
         "forma líquida": 24,
         "producto para gripa": 3,
-        "sin concentración": 3,
-        "no disponible": 22,
+        "sin concentración": 5,
+        "no disponible": 23,
         "oferta de paquete": 2,
         "sin unidades": 4,
         "forma no oral sólida": 10,
