@@ -1,5 +1,5 @@
 {
-  "fecha": "2026-10-30",
+  "fecha": "2026-10-31",
   "farmacias": {
     "La Rebaja": {
       "consultas_ok": 22,
@@ -42,16 +42,18 @@
       }
     },
     "Olímpica": {
-      "consultas_ok": 22,
-      "consultas_error": 0,
-      "productos": 204,
-      "filas": 124,
-      "errores": [],
+      "consultas_ok": 21,
+      "consultas_error": 1,
+      "productos": 195,
+      "filas": 125,
+      "errores": [
+        "dolex: HTTP Error 500: Internal Server Error"
+      ],
       "descartes": {
-        "combinación": 26,
+        "combinación": 25,
         "sin concentración": 3,
         "sin unidades": 2,
-        "sin principio activo en el nombre": 32,
+        "sin principio activo en el nombre": 23,
         "forma líquida": 13,
         "forma no oral sólida": 2,
         "oferta de paquete": 2
