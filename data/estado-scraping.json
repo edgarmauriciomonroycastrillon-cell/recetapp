@@ -1,18 +1,20 @@
 {
-  "fecha": "2026-10-31",
+  "fecha": "2026-11-01",
   "farmacias": {
     "La Rebaja": {
-      "consultas_ok": 22,
-      "consultas_error": 0,
-      "productos": 667,
-      "filas": 226,
-      "errores": [],
+      "consultas_ok": 21,
+      "consultas_error": 1,
+      "productos": 620,
+      "filas": 210,
+      "errores": [
+        "naproxeno: HTTP Error 500: Internal Server Error"
+      ],
       "descartes": {
-        "combinación": 217,
-        "no disponible": 88,
-        "forma líquida": 61,
+        "combinación": 201,
+        "no disponible": 87,
+        "forma líquida": 56,
         "sobre": 6,
-        "sin concentración": 37,
+        "sin concentración": 28,
         "principio activo no coincide con el nombre": 1,
         "producto para gripa": 6,
         "fuera de la lista": 12,
@@ -42,18 +44,16 @@
       }
     },
     "Olímpica": {
-      "consultas_ok": 21,
-      "consultas_error": 1,
-      "productos": 195,
-      "filas": 125,
-      "errores": [
-        "dolex: HTTP Error 500: Internal Server Error"
-      ],
+      "consultas_ok": 22,
+      "consultas_error": 0,
+      "productos": 204,
+      "filas": 123,
+      "errores": [],
       "descartes": {
-        "combinación": 25,
+        "combinación": 28,
         "sin concentración": 3,
         "sin unidades": 2,
-        "sin principio activo en el nombre": 23,
+        "sin principio activo en el nombre": 31,
         "forma líquida": 13,
         "forma no oral sólida": 2,
         "oferta de paquete": 2
