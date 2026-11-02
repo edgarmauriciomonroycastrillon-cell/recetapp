@@ -1,25 +1,23 @@
 {
-  "fecha": "2026-11-01",
+  "fecha": "2026-11-02",
   "farmacias": {
     "La Rebaja": {
-      "consultas_ok": 21,
-      "consultas_error": 1,
-      "productos": 620,
-      "filas": 210,
-      "errores": [
-        "naproxeno: HTTP Error 500: Internal Server Error"
-      ],
+      "consultas_ok": 22,
+      "consultas_error": 0,
+      "productos": 638,
+      "filas": 217,
+      "errores": [],
       "descartes": {
-        "combinación": 201,
-        "no disponible": 87,
-        "forma líquida": 56,
-        "sobre": 6,
-        "sin concentración": 28,
+        "combinación": 203,
+        "no disponible": 85,
+        "forma líquida": 60,
+        "sobre": 4,
+        "sin concentración": 38,
         "principio activo no coincide con el nombre": 1,
         "producto para gripa": 6,
-        "fuera de la lista": 12,
-        "forma no oral sólida": 12,
         "oferta de paquete": 3,
+        "fuera de la lista": 11,
+        "forma no oral sólida": 12,
         "sin principio activo en el nombre": 1
       }
     },
