@@ -1,23 +1,23 @@
 {
-  "fecha": "2026-11-03",
+  "fecha": "2026-11-04",
   "farmacias": {
     "La Rebaja": {
       "consultas_ok": 22,
       "consultas_error": 0,
-      "productos": 643,
+      "productos": 651,
       "filas": 218,
       "errores": [],
       "descartes": {
-        "combinación": 206,
-        "no disponible": 87,
+        "combinación": 210,
+        "no disponible": 90,
         "forma líquida": 59,
         "sobre": 4,
-        "sin concentración": 38,
+        "sin concentración": 39,
         "principio activo no coincide con el nombre": 1,
         "producto para gripa": 6,
-        "oferta de paquete": 3,
         "fuera de la lista": 11,
         "forma no oral sólida": 12,
+        "oferta de paquete": 3,
         "sin principio activo en el nombre": 1
       }
     },
@@ -44,14 +44,14 @@
     "Olímpica": {
       "consultas_ok": 22,
       "consultas_error": 0,
-      "productos": 204,
-      "filas": 123,
+      "productos": 205,
+      "filas": 124,
       "errores": [],
       "descartes": {
-        "combinación": 28,
+        "combinación": 27,
         "sin concentración": 3,
         "sin unidades": 2,
-        "sin principio activo en el nombre": 31,
+        "sin principio activo en el nombre": 32,
         "forma líquida": 13,
         "forma no oral sólida": 2,
         "oferta de paquete": 2
