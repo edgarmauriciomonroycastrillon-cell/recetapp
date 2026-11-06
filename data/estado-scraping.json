@@ -1,40 +1,41 @@
 {
-  "fecha": "2026-11-05",
+  "fecha": "2026-11-06",
   "farmacias": {
     "La Rebaja": {
       "consultas_ok": 22,
       "consultas_error": 0,
-      "productos": 651,
-      "filas": 216,
+      "productos": 645,
+      "filas": 215,
       "errores": [],
       "descartes": {
         "combinación": 210,
-        "no disponible": 92,
+        "no disponible": 88,
         "forma líquida": 59,
-        "sobre": 4,
-        "sin concentración": 39,
-        "principio activo no coincide con el nombre": 1,
+        "sobre": 5,
+        "sin concentración": 38,
         "producto para gripa": 6,
+        "oferta de paquete": 3,
         "fuera de la lista": 11,
         "forma no oral sólida": 12,
-        "oferta de paquete": 3,
         "sin principio activo en el nombre": 1
       }
     },
     "Locatel": {
-      "consultas_ok": 22,
-      "consultas_error": 0,
-      "productos": 525,
-      "filas": 205,
-      "errores": [],
+      "consultas_ok": 21,
+      "consultas_error": 1,
+      "productos": 491,
+      "filas": 197,
+      "errores": [
+        "cetirizina: HTTP Error 500: Internal Server Error"
+      ],
       "descartes": {
-        "combinación": 156,
-        "fuera de la lista": 58,
-        "sin principio activo en el nombre": 49,
-        "forma líquida": 24,
+        "combinación": 146,
+        "fuera de la lista": 48,
+        "sin principio activo en el nombre": 46,
+        "forma líquida": 20,
         "producto para gripa": 3,
         "sin concentración": 5,
-        "no disponible": 25,
+        "no disponible": 26,
         "oferta de paquete": 2,
         "sin unidades": 4,
         "forma no oral sólida": 10,
@@ -44,14 +45,14 @@
     "Olímpica": {
       "consultas_ok": 22,
       "consultas_error": 0,
-      "productos": 205,
+      "productos": 204,
       "filas": 124,
       "errores": [],
       "descartes": {
         "combinación": 27,
         "sin concentración": 3,
         "sin unidades": 2,
-        "sin principio activo en el nombre": 32,
+        "sin principio activo en el nombre": 31,
         "forma líquida": 13,
         "forma no oral sólida": 2,
         "oferta de paquete": 2
