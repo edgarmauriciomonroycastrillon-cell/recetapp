@@ -1,15 +1,15 @@
 {
-  "fecha": "2026-11-07",
+  "fecha": "2026-11-08",
   "farmacias": {
     "La Rebaja": {
       "consultas_ok": 22,
       "consultas_error": 0,
-      "productos": 646,
+      "productos": 647,
       "filas": 215,
       "errores": [],
       "descartes": {
         "combinación": 210,
-        "no disponible": 88,
+        "no disponible": 89,
         "forma líquida": 59,
         "sobre": 5,
         "sin concentración": 39,
@@ -44,10 +44,10 @@
       "consultas_ok": 22,
       "consultas_error": 0,
       "productos": 204,
-      "filas": 124,
+      "filas": 127,
       "errores": [],
       "descartes": {
-        "combinación": 29,
+        "combinación": 26,
         "sin concentración": 3,
         "sin unidades": 2,
         "sin principio activo en el nombre": 29,
