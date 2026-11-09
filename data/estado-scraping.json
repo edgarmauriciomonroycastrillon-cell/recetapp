@@ -1,18 +1,18 @@
 {
-  "fecha": "2026-11-08",
+  "fecha": "2026-11-09",
   "farmacias": {
     "La Rebaja": {
       "consultas_ok": 22,
       "consultas_error": 0,
       "productos": 647,
-      "filas": 215,
+      "filas": 218,
       "errores": [],
       "descartes": {
         "combinación": 210,
-        "no disponible": 89,
+        "no disponible": 85,
         "forma líquida": 59,
         "sobre": 5,
-        "sin concentración": 39,
+        "sin concentración": 40,
         "producto para gripa": 6,
         "fuera de la lista": 11,
         "forma no oral sólida": 12,
@@ -44,10 +44,10 @@
       "consultas_ok": 22,
       "consultas_error": 0,
       "productos": 204,
-      "filas": 127,
+      "filas": 124,
       "errores": [],
       "descartes": {
-        "combinación": 26,
+        "combinación": 29,
         "sin concentración": 3,
         "sin unidades": 2,
         "sin principio activo en el nombre": 29,
