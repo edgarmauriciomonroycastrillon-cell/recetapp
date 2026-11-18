@@ -1,34 +1,36 @@
 {
-  "fecha": "2026-11-17",
+  "fecha": "2026-11-18",
   "farmacias": {
     "La Rebaja": {
-      "consultas_ok": 22,
-      "consultas_error": 0,
-      "productos": 644,
-      "filas": 219,
-      "errores": [],
+      "consultas_ok": 21,
+      "consultas_error": 1,
+      "productos": 617,
+      "filas": 208,
+      "errores": [
+        "naproxeno: HTTP Error 500: Internal Server Error"
+      ],
       "descartes": {
-        "combinación": 209,
-        "no disponible": 83,
-        "forma líquida": 60,
-        "sin concentración": 39,
+        "combinación": 203,
+        "no disponible": 84,
+        "forma líquida": 55,
+        "sobre": 6,
+        "sin concentración": 30,
         "producto para gripa": 6,
-        "oferta de paquete": 3,
-        "fuera de la lista": 11,
-        "sobre": 4,
+        "fuera de la lista": 12,
         "forma no oral sólida": 12,
+        "oferta de paquete": 3,
         "sin principio activo en el nombre": 1
       }
     },
     "Locatel": {
       "consultas_ok": 22,
       "consultas_error": 0,
-      "productos": 527,
+      "productos": 526,
       "filas": 203,
       "errores": [],
       "descartes": {
         "combinación": 157,
-        "fuera de la lista": 60,
+        "fuera de la lista": 59,
         "sin principio activo en el nombre": 49,
         "forma líquida": 24,
         "producto para gripa": 3,
@@ -41,18 +43,16 @@
       }
     },
     "Olímpica": {
-      "consultas_ok": 21,
-      "consultas_error": 1,
-      "productos": 199,
-      "filas": 121,
-      "errores": [
-        "enalapril: HTTP Error 500: Internal Server Error"
-      ],
+      "consultas_ok": 22,
+      "consultas_error": 0,
+      "productos": 203,
+      "filas": 125,
+      "errores": [],
       "descartes": {
-        "combinación": 27,
+        "combinación": 26,
         "sin concentración": 3,
         "sin unidades": 2,
-        "sin principio activo en el nombre": 29,
+        "sin principio activo en el nombre": 30,
         "forma líquida": 13,
         "forma no oral sólida": 2,
         "oferta de paquete": 2
