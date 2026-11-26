@@ -1,39 +1,44 @@
 {
-  "fecha": "2026-11-25",
+  "fecha": "2026-11-26",
   "farmacias": {
     "La Rebaja": {
-      "consultas_ok": 22,
-      "consultas_error": 0,
-      "productos": 664,
-      "filas": 226,
-      "errores": [],
+      "consultas_ok": 21,
+      "consultas_error": 1,
+      "productos": 618,
+      "filas": 202,
+      "errores": [
+        "ibuprofeno: HTTP Error 500: Internal Server Error"
+      ],
       "descartes": {
-        "combinación": 220,
-        "no disponible": 82,
-        "forma líquida": 62,
+        "combinación": 209,
+        "no disponible": 83,
+        "forma líquida": 57,
         "sobre": 6,
-        "sin concentración": 37,
-        "producto para gripa": 6,
+        "sin concentración": 32,
         "fuera de la lista": 12,
         "forma no oral sólida": 12,
         "oferta de paquete": 3,
+        "producto para gripa": 4,
         "sin principio activo en el nombre": 1
       }
     },
     "Locatel": {
-      "consultas_ok": 22,
-      "consultas_error": 0,
-      "productos": 527,
-      "filas": 204,
-      "errores": [],
+      "consultas_ok": 20,
+      "consultas_error": 2,
+      "productos": 479,
+      "filas": 187,
+      "errores": [
+        "atorvastatina: HTTP Error 500: Internal Server Error",
+        "cetirizina: HTTP Error 500: Internal Server Error"
+      ],
       "descartes": {
-        "combinación": 156,
-        "fuera de la lista": 60,
-        "sin principio activo en el nombre": 49,
-        "forma líquida": 24,
+        "combinación": 145,
+        "fuera de la lista": 50,
+        "sin principio activo en el nombre": 45,
+        "forma líquida": 20,
         "producto para gripa": 3,
         "sin concentración": 5,
-        "no disponible": 26,
+        "no disponible": 24,
         "oferta de paquete": 2,
         "sin unidades": 4,
         "forma no oral sólida": 10,
@@ -44,13 +49,13 @@
       "consultas_ok": 22,
       "consultas_error": 0,
       "productos": 203,
-      "filas": 121,
+      "filas": 124,
       "errores": [],
       "descartes": {
         "combinación": 28,
-        "sin concentración": 4,
+        "sin concentración": 3,
         "sin unidades": 2,
-        "sin principio activo en el nombre": 31,
+        "sin principio activo en el nombre": 29,
         "forma líquida": 13,
         "forma no oral sólida": 2,
         "oferta de paquete": 2
