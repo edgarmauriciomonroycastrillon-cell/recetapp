@@ -1,45 +1,40 @@
 {
-  "fecha": "2026-11-26",
+  "fecha": "2026-11-27",
   "farmacias": {
     "La Rebaja": {
-      "consultas_ok": 21,
-      "consultas_error": 1,
-      "productos": 618,
-      "filas": 202,
-      "errores": [
-        "ibuprofeno: HTTP Error 500: Internal Server Error"
-      ],
+      "consultas_ok": 22,
+      "consultas_error": 0,
+      "productos": 662,
+      "filas": 221,
+      "errores": [],
       "descartes": {
-        "combinación": 209,
-        "no disponible": 83,
-        "forma líquida": 57,
+        "combinación": 215,
+        "no disponible": 88,
+        "forma líquida": 62,
         "sobre": 6,
-        "sin concentración": 32,
+        "sin concentración": 38,
+        "producto para gripa": 6,
+        "oferta de paquete": 4,
         "fuera de la lista": 12,
         "forma no oral sólida": 12,
-        "oferta de paquete": 3,
-        "producto para gripa": 4,
         "sin principio activo en el nombre": 1
       }
     },
     "Locatel": {
-      "consultas_ok": 20,
-      "consultas_error": 2,
-      "productos": 479,
-      "filas": 187,
-      "errores": [
-        "atorvastatina: HTTP Error 500: Internal Server Error",
-        "cetirizina: HTTP Error 500: Internal Server Error"
-      ],
+      "consultas_ok": 22,
+      "consultas_error": 0,
+      "productos": 527,
+      "filas": 208,
+      "errores": [],
       "descartes": {
-        "combinación": 145,
-        "fuera de la lista": 50,
-        "sin principio activo en el nombre": 45,
-        "forma líquida": 20,
+        "combinación": 156,
+        "fuera de la lista": 60,
+        "sin principio activo en el nombre": 49,
+        "forma líquida": 24,
         "producto para gripa": 3,
         "sin concentración": 5,
-        "no disponible": 24,
         "oferta de paquete": 2,
+        "no disponible": 22,
         "sin unidades": 4,
         "forma no oral sólida": 10,
         "sobre": 2
@@ -52,10 +47,10 @@
       "filas": 124,
       "errores": [],
       "descartes": {
-        "combinación": 28,
+        "combinación": 27,
         "sin concentración": 3,
         "sin unidades": 2,
-        "sin principio activo en el nombre": 29,
+        "sin principio activo en el nombre": 30,
         "forma líquida": 13,
         "forma no oral sólida": 2,
         "oferta de paquete": 2
